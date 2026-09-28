@@ -1,0 +1,20 @@
+# Local development database (P0.3). Production DB is Neon via DATABASE_URL (Phase 7).
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: senseheaven
+      POSTGRES_PASSWORD: senseheaven
+      POSTGRES_DB: senseheaven
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U senseheaven -d senseheaven"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  pgdata:
