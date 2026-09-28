@@ -17,3 +17,4 @@ One line per event: `YYYY-MM-DD HH:MM · phase N · slice X · ✅|⚠|❌ · no
 2026-09-28 11:59 · phase 0 · 0.1 · ✅ · repo layout, meta docs, 4 spec files copied, git init (local identity: SenseHeaven Builder)
 2026-09-28 12:01 · phase 0 · 0.2 · ✅ · scripts/doctor.sh (FAIL only python/node/docker/git; adb/SDK/java/gh/disk are WARN)
 2026-09-28 12:01 · phase 0 · 0.3 · ✅ · docker-compose postgres:16 + healthcheck; .env.example
+2026-09-28 12:01 · phase 0 · 0.4 · ✅ · gate runner + phase JSON writer, layout/db/placeholders/gitignore checks, Makefile targets, ci.yml + android.yml, later-phase script stubs (D-13)

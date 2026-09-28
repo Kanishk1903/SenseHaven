@@ -1,0 +1,16 @@
+# Placeholder workflow (P0.4). Replaced by the real build + release pipeline in Phase 5 (P5.0)
+# and the APK release job in Phase 7 (P7.3).
+name: android
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "android/**"
+
+jobs:
+  scaffold:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Android pipeline pending
+        run: echo "android pending — replaced by the real build in Phase 5 (P5.0), release job in Phase 7 (P7.3)"

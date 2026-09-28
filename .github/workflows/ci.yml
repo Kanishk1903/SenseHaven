@@ -1,0 +1,62 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: senseheaven
+          POSTGRES_PASSWORD: senseheaven
+          POSTGRES_DB: senseheaven
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U senseheaven"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql+psycopg://senseheaven:senseheaven@localhost:5432/senseheaven
+      APP_SECRET: ci-only-secret-not-for-production
+      PAIRING_PEPPER: ci-only-pepper-not-for-production
+      ENV: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: API checks
+        run: |
+          if [ ! -f api/pyproject.toml ]; then
+            echo "api/ is empty — skipping (API arrives in Phase 2)"
+            exit 0
+          fi
+          python -m pip install -r api/requirements.lock
+          ruff check api
+          pytest api/tests -q
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Web checks
+        run: |
+          if [ ! -f web/package.json ]; then
+            echo "web/ is empty — skipping (web dashboard arrives in Phase 4)"
+            exit 0
+          fi
+          cd web
+          npm ci
+          npm run lint
+          npx tsc --noEmit
+          npm run test -- run
+          npm run build
