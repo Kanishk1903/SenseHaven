@@ -1,0 +1,16 @@
+# Render Blueprint (Phase 7). One web service; the database is Neon (H2b), never Render Postgres.
+services:
+  - type: web
+    name: senseheaven
+    runtime: docker
+    plan: free
+    healthCheckPath: /healthz
+    envVars:
+      - key: ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: APP_SECRET
+        generateValue: true
+      - key: PAIRING_PEPPER
+        generateValue: true

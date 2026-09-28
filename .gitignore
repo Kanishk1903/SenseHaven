@@ -1,0 +1,29 @@
+# secrets
+.env
+*.keystore
+*.jks
+
+# node
+node_modules/
+dist/
+coverage/
+
+# python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# ml
+ml/data/
+ml/artifacts/*.task
+
+# android
+android/**/build/
+.gradle/
+local.properties
+*.apk
+
+# misc
+.DS_Store
