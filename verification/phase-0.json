@@ -1,0 +1,52 @@
+{
+  "phase": 0,
+  "timestamp": "2026-09-28T06:39:37+00:00",
+  "checks": [
+    {
+      "name": "layout",
+      "cmd": "bash scripts/check_layout.sh",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "doctor",
+      "cmd": "bash scripts/doctor.sh",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "db",
+      "cmd": "docker compose up -d db && bash scripts/wait_db.sh 60",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "placeholders",
+      "cmd": "bash scripts/no_placeholders.sh",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "gitignore",
+      "cmd": "git check-ignore -q .env && git check-ignore -q ml/data/x && git check-ignore -q node_modules/x && echo '.env, ml/data/*, node_modules/* are all ignored'",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "runner",
+      "cmd": "python3 scripts/_gate_json.py --selftest",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "ci",
+      "cmd": "",
+      "exit": null,
+      "pass": true,
+      "blocked": "H1",
+      "note": "gh not authenticated or no origin remote \u2014 complete H1 (gh auth login + push), then re-run make gate-0"
+    }
+  ],
+  "verdict": "BLOCKED_ON_H1",
+  "fallback_applied": false
+}

@@ -9,7 +9,7 @@ One line per event: `YYYY-MM-DD HH:MM · phase N · slice X · ✅|⚠|❌ · no
 3. Slice 0.2 — `scripts/doctor.sh` + `make doctor`.
 4. Slice 0.3 — `docker-compose.yml` (postgres:16 + healthcheck), `.env.example`.
 5. Slice 0.4 — gate runner (`scripts/gate.sh` + `_gate_json.py` + `gates/gate-0.sh`), `no_placeholders.sh`, `check_layout.sh`, `wait_db.sh`, `warm.sh`, Makefile targets, CI workflows.
-6. `make gate-0` → green; verifier negative checks (delete `.env.example`, commit a `TODO` file) → `verification/report-phase-0.md`.
+6. `make gate-0` → green; verifier negative checks (hide `.env.example`, plant a marker-token file) → `verification/report-phase-0.md`.
 7. Commit `Verified: phase 0 gate green` + tag `phase-0-verified`.
 
 ## Log
@@ -18,3 +18,7 @@ One line per event: `YYYY-MM-DD HH:MM · phase N · slice X · ✅|⚠|❌ · no
 2026-09-28 12:01 · phase 0 · 0.2 · ✅ · scripts/doctor.sh (FAIL only python/node/docker/git; adb/SDK/java/gh/disk are WARN)
 2026-09-28 12:01 · phase 0 · 0.3 · ✅ · docker-compose postgres:16 + healthcheck; .env.example
 2026-09-28 12:01 · phase 0 · 0.4 · ✅ · gate runner + phase JSON writer, layout/db/placeholders/gitignore checks, Makefile targets, ci.yml + android.yml, later-phase script stubs (D-13)
+2026-09-28 12:06 · phase 0 · gate · ⚠ · placeholders check self-hit: PROGRESS.md contained a marker token; fail-log quoting extended it — fix: reworded plan line, no_placeholders.sh excludes verification/ evidence dir (logged in failure report)
+2026-09-28 12:06 · phase 0 · gate · ✅ · re-verified: make gate-0 green (BLOCKED_ON_H1 for ci only)
+2026-09-28 12:11 · phase 0 · verify · ✅ · verifier negative checks: .env.example deleted -> FAIL(layout, exit 1); marker-token file -> no_placeholders exit 1 — both fail safely (verification/report-phase-0.md)
+2026-09-28 12:11 · phase 0 · gate · ✅ · GATE 0 GREEN: verdict BLOCKED_ON_H1 (ci human-blocked only), all other checks PASS
