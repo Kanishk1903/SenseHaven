@@ -32,3 +32,4 @@ One line per event: `YYYY-MM-DD HH:MM · phase N · slice X · ✅|⚠|❌ · no
 5. Verifier report `verification/report-phase-1.md` with negative checks (tampered error table, tampered generated file).
 6. Commit + tag `phase-1-verified`.
 2026-09-30 10:33 · phase 1 · P1.1 · ✅ · contracts/error_codes.md: 17 codes, HTTP + copy per File 02 §5
+2026-09-30 10:33 · phase 1 · P1.2 · ✅ · settings_schema.json (draft 2020-12) + check_contracts.py (defaults, cross-field 3 bad/3 good, range+pattern negatives)

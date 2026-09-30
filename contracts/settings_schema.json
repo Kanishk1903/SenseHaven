@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://senseheaven.local/contracts/settings_schema.json",
+  "title": "ChildSettings",
+  "description": "children.settings JSONB (LEAN §1.2). Server-authoritative; synced to the paired device via config_version. The cross-field rule stress_threshold < calm_threshold - 10 is declared in x-cross-field and enforced by the API (Phase 2 Pydantic model) and tested in scripts/check_contracts.py.",
+  "x-cross-field": {
+    "expr": "stress_threshold < calm_threshold - 10",
+    "reason": "keeps at least a 10-point neutral band between the stress and calm hysteresis bands"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "good_bonus_min",
+    "stress_penalty_min",
+    "cooldown_min",
+    "max_bonus_per_session_min",
+    "calm_threshold",
+    "stress_threshold",
+    "sustained_stress_s",
+    "sustained_calm_s",
+    "penalty_lockout_s",
+    "monitoring_enabled",
+    "activity_log_enabled",
+    "show_mood_to_child",
+    "blocked_packages",
+    "allowed_packages",
+    "config_version"
+  ],
+  "properties": {
+    "good_bonus_min": {
+      "type": "integer", "minimum": 1, "maximum": 60, "default": 10,
+      "description": "Minutes granted each time a sustained calm window completes."
+    },
+    "stress_penalty_min": {
+      "type": "integer", "minimum": 1, "maximum": 30, "default": 5,
+      "description": "Minutes deducted when a sustained stress window completes."
+    },
+    "cooldown_min": {
+      "type": "integer", "minimum": 1, "maximum": 15, "default": 5,
+      "description": "Length of the breathing-screen pause after a penalty; time is not consumed."
+    },
+    "max_bonus_per_session_min": {
+      "type": "integer", "minimum": 0, "maximum": 120, "default": 30,
+      "description": "Total bonus minutes a single session can earn."
+    },
+    "calm_threshold": {
+      "type": "integer", "minimum": 50, "maximum": 95, "default": 70,
+      "description": "Calm Index at or above which the label enters calm (leaves below it minus 5)."
+    },
+    "stress_threshold": {
+      "type": "integer", "minimum": 5, "maximum": 60, "default": 35,
+      "description": "Calm Index below which the label enters stressed (leaves at stress_threshold + 5). Must be < calm_threshold - 10."
+    },
+    "sustained_stress_s": {
+      "type": "integer", "minimum": 60, "maximum": 900, "default": 300,
+      "description": "Seconds of continuous stressed label before penalty + cooldown."
+    },
+    "sustained_calm_s": {
+      "type": "integer", "minimum": 300, "maximum": 3600, "default": 900,
+      "description": "Seconds of continuous calm label before a bonus."
+    },
+    "penalty_lockout_s": {
+      "type": "integer", "minimum": 300, "maximum": 3600, "default": 900,
+      "description": "Minimum seconds between penalties."
+    },
+    "monitoring_enabled": {
+      "type": "boolean", "default": true,
+      "description": "Camera-based Calm Index sampling. When false the countdown still works; no emotion events are produced."
+    },
+    "activity_log_enabled": {
+      "type": "boolean", "default": true,
+      "description": "Daily per-app usage totals reported to the dashboard."
+    },
+    "show_mood_to_child": {
+      "type": "boolean", "default": false,
+      "description": "When false, the child's home screen hides the mood orb colour and shows a neutral orb."
+    },
+    "blocked_packages": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-zA-Z][\\w.]*$" },
+      "default": [],
+      "description": "Apps the child may not open during a session; enforced by the 1 s foreground poller. Emergency/dialer packages are always allowed regardless of this list."
+    },
+    "allowed_packages": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-zA-Z][\\w.]*$" },
+      "default": [
+        "com.android.dialer",
+        "com.google.android.dialer",
+        "com.android.emergency"
+      ],
+      "description": "Packages that never consume time and are never blocked (emergency path)."
+    },
+    "config_version": {
+      "type": "integer", "minimum": 0, "default": 1,
+      "description": "Server-managed; bumped once per settings PATCH. Clients read it and never write it."
+    }
+  }
+}
