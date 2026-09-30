@@ -26,8 +26,12 @@ gate-all:
 	exit $$ok
 
 api-test:
-	@if [ -f api/pyproject.toml ]; then cd api && pytest; \
+	@if [ -f api/pyproject.toml ]; then cd api && .venv/bin/pytest; \
 	else echo "api/ is empty — API tests arrive in Phase 2 (gate-2)"; fi
+
+contract-export:
+	cd api && PYTHONPATH=.. .venv/bin/python -W ignore -c "import json; from api.app.main import create_app; print(json.dumps(create_app().openapi(), indent=2))" > ../contracts/openapi.json
+	@echo "wrote contracts/openapi.json"
 
 web-test:
 	@if [ -f web/package.json ]; then cd web && npm run test -- run; \

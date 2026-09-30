@@ -1,0 +1,10 @@
+# GATE 2 — API core (docs/spec/03-phases-and-gates-lean.md §GATE 2).
+check "tests" "cd api && .venv/bin/pytest -p no:cacheprovider -q --cov-fail-under=60"
+check "no-skips" "! grep -rnE 'pytest\.mark\.skip|pytest\.skip|skipif' api/tests/"
+check "idor" "cd api && .venv/bin/pytest -p no:cacheprovider -q tests/test_idor_matrix.py --no-cov"
+check "security" "cd api && .venv/bin/pytest -p no:cacheprovider -q tests/test_security.py tests/test_auth.py tests/test_health.py --no-cov"
+check "openapi" "make contract-export && git diff --exit-code -- contracts/openapi.json && echo 'openapi snapshot unchanged'"
+check "virtual child" "api/.venv/bin/python scripts/check_virtual_child.py"
+check "lint" "cd api && .venv/bin/ruff check . && cd .. && api/.venv/bin/ruff check scripts/"
+check "placeholders" "bash scripts/no_placeholders.sh"
+check "regression: previous gate" "bash scripts/gate.sh 1"

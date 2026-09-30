@@ -6,7 +6,6 @@ large text and UI-component boundaries 3:1. On failure the token must be adjuste
 change logged in GATES_CHANGELOG.md — the bar itself is never lowered.
 """
 import json
-import math
 import pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
