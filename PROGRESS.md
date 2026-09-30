@@ -35,3 +35,16 @@ One line per event: `YYYY-MM-DD HH:MM · phase N · slice X · ✅|⚠|❌ · no
 2026-09-30 10:33 · phase 1 · P1.2 · ✅ · settings_schema.json (draft 2020-12) + check_contracts.py (defaults, cross-field 3 bad/3 good, range+pattern negatives)
 2026-09-30 10:33 · phase 1 · P1.3 · ✅ · tokens.json + generated css/cjs/kt (idempotent) + check_contrast.py all 8 pairs pass; text-subtle #74746C->#6B6B63 (3.97->5.01) logged in GATES_CHANGELOG
 2026-09-30 10:33 · phase 1 · gate · ▶ · running make gate-1
+
+## Phase 2 plan (≤ 10 lines)
+
+1. P2.1 — venv + pinned lock, config (fail-fast in prod, dev defaults), db engine, request-id + security-headers middleware, problem+json handlers, limiter, healthz/readyz + tests.
+2. P2.2 — 10 lean SQLAlchemy tables (UUID pk, UTC, unique constraints, partial unique device) + constraint/cascade tests.
+3. P2.3 — argon2id auth, JWT cookie (flags per ENV), X-Requested-With guard, login throttle, PUT pin (PBKDF2 210k, pin_version) + tests.
+4. P2.4 — children CRUD (soft delete) + settings deep-merge validating against schema-mirroring Pydantic model, config_version bump + tests.
+5. P2.5 — pairing codes (peppered sha256, TTL, attempts) + device pair (token sha256, previous device revoked) + bearer dep + tests.
+6. P2.6 — /device/sync, /device/events (≤200, ON CONFLICT DO NOTHING, max() upserts, stress_alert→alert, permission alerts), ack + tests.
+7. P2.7 — live state derivation, session create/end/lock/adjust → commands, analytics (overview/timeline/app-usage/sessions, parent-tz DST), alerts, delete data + tests.
+8. P2.8 — IDOR matrix over every parent path route, security header/docs-off tests, seed_demo.py, virtual_child.py, contract-export.
+9. `make gate-2` green → verifier report → tag `phase-2-verified`.
+2026-09-30 10:42 · phase 2 · P2.1 · ✅ · venv+lock(42 pins), config dev-defaults/fail-fast (D-16), engine, middleware, problem+json, limiter, healthz/readyz — 8 tests green
