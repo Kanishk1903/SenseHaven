@@ -9,7 +9,7 @@ Server rules (File 03 binding):
 - heartbeat losing a permission grant creates one alert per device per grant per day.
 """
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -101,7 +101,7 @@ def _upsert_session_snapshot(db: Session, device: Device, snapshot) -> None:
 
 
 def _apply_heartbeat(db: Session, device: Device, heartbeat) -> None:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     device.last_seen_at = now
     if heartbeat.battery_pct is not None:
         device.battery_pct = heartbeat.battery_pct

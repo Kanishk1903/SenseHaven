@@ -1,6 +1,6 @@
 """Command queue service (P2.6+). Commands expire after 24 h (File 01 §E5)."""
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.orm import Session
 
@@ -17,7 +17,7 @@ def enqueue_command(
         device_id=device_id,
         kind=kind,
         payload=payload,
-        expires_at=datetime.now(timezone.utc) + timedelta(seconds=COMMAND_TTL_S),
+        expires_at=datetime.now(UTC) + timedelta(seconds=COMMAND_TTL_S),
     )
     db.add(command)
     db.flush()

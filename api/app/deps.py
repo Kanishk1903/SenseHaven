@@ -1,6 +1,5 @@
 """Shared FastAPI dependencies (P2.1+): db session, parent session, device bearer, CSRF-style header."""
 import hashlib
-import uuid
 from collections.abc import Generator
 
 import jwt
@@ -40,10 +39,10 @@ def get_current_parent(request: Request, db: Session = Depends(get_db)) -> Paren
         raise ApiError(401, "UNAUTHENTICATED", "Your session ended. Sign in again to keep going.")
     try:
         parent_id = decode_session_token(token)
-    except jwt.ExpiredSignatureError:
-        raise ApiError(401, "UNAUTHENTICATED", "Your session expired. Sign in again to keep going.")
-    except (jwt.InvalidTokenError, ValueError):
-        raise ApiError(401, "UNAUTHENTICATED", "Your session ended. Sign in again to keep going.")
+    except jwt.ExpiredSignatureError as error:
+        raise ApiError(401, "UNAUTHENTICATED", "Your session expired. Sign in again to keep going.") from error
+    except (jwt.InvalidTokenError, ValueError) as error:
+        raise ApiError(401, "UNAUTHENTICATED", "Your session ended. Sign in again to keep going.") from error
     parent = db.get(Parent, parent_id)
     if parent is None:
         raise ApiError(401, "UNAUTHENTICATED", "Your session ended. Sign in again to keep going.")

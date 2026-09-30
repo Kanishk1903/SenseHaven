@@ -1,0 +1,11 @@
+PASS  python3 3.11.5 (>= 3.11)
+PASS  node 26.8.2 (>= 20)
+PASS  npm 11.19.1
+FAIL  docker daemon not reachable (run: colima start — or open Docker Desktop)
+PASS  git 2.54.0
+WARN  java >= 17 recommended for Android builds, found: java version "26.0.1" 2026-04-21
+WARN  gh not authenticated (SETUP_REQUIRED.md H1)
+PASS  disk free 56 GB (>= 10 GB)
+WARN  adb not found (Android e2e from Phase 5)
+WARN  Android SDK not found (ANDROID_HOME unset) — needed from Phase 5; GitHub Actions is the build authority
+doctor: environment has FAIL items (see above)

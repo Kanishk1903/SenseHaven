@@ -1,5 +1,4 @@
 """P2.1 — health endpoints, problem+json shape, security headers, docs-off in production."""
-import pytest
 from fastapi.testclient import TestClient
 
 from api.app.main import create_app
@@ -58,7 +57,11 @@ def test_security_headers_present(client):
 def test_hsts_only_in_production():
     from api.app.config import Settings
 
-    app = create_app(Settings(env="production", database_url="postgresql+psycopg://x/y", app_secret="s" * 20, pairing_pepper="p" * 20))
+    settings = Settings(
+        env="production", database_url="postgresql+psycopg://x/y",
+        app_secret="s" * 20, pairing_pepper="p" * 20,
+    )
+    app = create_app(settings)
     with TestClient(app, raise_server_exceptions=False) as production_client:
         response = production_client.get("/api/v1/healthz")
         assert "Strict-Transport-Security" in response.headers

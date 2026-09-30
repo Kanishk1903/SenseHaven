@@ -2,8 +2,7 @@
 import base64
 import hashlib
 import secrets
-import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, Field
@@ -15,7 +14,7 @@ from ..models import Child, Command, Device, Parent
 from ..problems import ApiError
 from ..schemas.device import EventsBatchIn, HeartbeatIn
 from ..security.limiter import limiter
-from ..services.events import current_session, ingest_events, _apply_heartbeat
+from ..services.events import _apply_heartbeat, current_session, ingest_events
 from ..services.pairing import find_known_code, find_usable_code
 
 router = APIRouter(prefix="/device", tags=["device"])
@@ -73,7 +72,7 @@ def pair(body: PairIn, request: Request, db: Session = Depends(get_db)) -> dict:
     parent = db.get(Parent, child.parent_id)
 
     # Pairing again for a child revokes the previous device (File 03 binding; D-19).
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     for old in db.scalars(
         select(Device).where(Device.child_id == child.id, Device.revoked_at.is_(None))
     ):
@@ -109,7 +108,7 @@ def sync(
     device: Device = Depends(get_current_device),
     db: Session = Depends(get_db),
 ) -> dict:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     device.last_seen_at = now
     child = db.get(Child, device.child_id)
     parent = db.get(Parent, child.parent_id)
@@ -164,7 +163,7 @@ def ack_command(
     command = db.get(Command, command_id)
     if command is None or command.child_id != device.child_id:
         raise ApiError(404, "NOT_FOUND", "We couldn't find that. It may have been removed — head back and try again.")
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     command.delivered_at = command.delivered_at or now
     command.acked_at = command.acked_at or now
     db.commit()

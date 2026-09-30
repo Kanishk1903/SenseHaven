@@ -1,9 +1,9 @@
 """Parent-facing request/response schemas (P2.3+)."""
 import uuid
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
-from zoneinfo import ZoneInfo
 
 
 class RegisterIn(BaseModel):

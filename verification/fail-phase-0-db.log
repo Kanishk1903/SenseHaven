@@ -1,4 +1,1 @@
- Container aakhribaar_glm-db-1 Recreate 
- Container aakhribaar_glm-db-1 Recreated 
- Container aakhribaar_glm-db-1 Starting 
-Error response from daemon: failed to set up container networking: driver failed programming external connectivity on endpoint aakhribaar_glm-db-1 (c4c19877ef4d2aec7f59a6ee5292e25abf4525c9c0318f7cc1895020ffcbe2c4): Bind for 0.0.0.0:5432 failed: port is already allocated
+failed to connect to the docker API at unix:///Users/kanishkgupta/.colima/default/docker.sock; check if the path is correct and if the daemon is running: dial unix /Users/kanishkgupta/.colima/default/docker.sock: connect: no such file or directory

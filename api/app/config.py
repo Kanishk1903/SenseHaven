@@ -4,8 +4,8 @@ Reads environment variables (and a local .env when present). In production a mis
 required variable fails fast with a clear message. In development/test, safe local defaults
 are used so `make up` works from a fresh clone (DECISIONS.md D-16).
 """
-from functools import lru_cache
 import sys
+from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -45,7 +45,7 @@ class Settings(BaseSettings):
         if self.is_production:
             raise RuntimeError(
                 "missing required environment variables: "
-                + ", ".join(m.upper())
+                + ", ".join(name.upper() for name in missing)
                 + " — set them in the environment (Render/Neon), never in code"
             )
         if "database_url" in missing:

@@ -47,7 +47,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     install_middleware(app, settings)
     install_error_handlers(app)
 
-    from .routers import auth, children, device, ops, pairing, parents
+    from .routers import alerts, analytics, auth, children, device, devices, ops, pairing, parents, sessions
 
     app.include_router(ops.router)
     app.include_router(ops.router, prefix="/api/v1")
@@ -56,6 +56,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(children.router, prefix="/api/v1")
     app.include_router(pairing.router, prefix="/api/v1")
     app.include_router(device.router, prefix="/api/v1")
+    app.include_router(sessions.router, prefix="/api/v1")
+    app.include_router(analytics.router, prefix="/api/v1")
+    app.include_router(alerts.router, prefix="/api/v1")
+    app.include_router(devices.router, prefix="/api/v1")
 
     return app
 

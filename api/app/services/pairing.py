@@ -1,7 +1,7 @@
 """Pairing service (P2.5): 6-digit codes, peppered sha256, TTL, single use, attempts."""
 import hashlib
 import secrets
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -23,7 +23,7 @@ def hash_code(code: str) -> str:
 
 def expire_stale_codes(db: Session, child_id) -> None:
     """Only one live code per child: expire earlier unused codes (idempotent re-issue)."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     for code in db.scalars(
         select(PairingCode).where(
             PairingCode.child_id == child_id,
@@ -42,7 +42,7 @@ def create_pairing_code(db: Session, child: Child) -> tuple[PairingCode, str]:
     row = PairingCode(
         child_id=child.id,
         code_hash=hash_code(code),
-        expires_at=datetime.now(timezone.utc) + timedelta(seconds=CODE_TTL_S),
+        expires_at=datetime.now(UTC) + timedelta(seconds=CODE_TTL_S),
     )
     db.add(row)
     db.flush()
@@ -50,7 +50,7 @@ def create_pairing_code(db: Session, child: Child) -> tuple[PairingCode, str]:
 
 
 def find_usable_code(db: Session, code: str) -> PairingCode | None:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     return db.scalar(
         select(PairingCode).where(
             PairingCode.code_hash == hash_code(code),

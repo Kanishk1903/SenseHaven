@@ -5,7 +5,7 @@ timezone-aware datetimes everywhere, idempotency via UNIQUE(child_id, client_uui
 Cross-tenant isolation is enforced in queries, not the schema.
 """
 import uuid
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 
 from sqlalchemy import (
     BigInteger,
@@ -14,6 +14,7 @@ from sqlalchemy import (
     DateTime,
     Float,
     ForeignKey,
+    Identity,
     Index,
     Integer,
     SmallInteger,
@@ -22,13 +23,12 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import Identity
 
 from ..db import Base
 
 
 def utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def new_uuid() -> uuid.UUID:

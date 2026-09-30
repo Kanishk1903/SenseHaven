@@ -1,6 +1,6 @@
 """Children CRUD + settings (P2.4). Cross-tenant access returns 404, never 403 (File 01 §E3)."""
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, Request, Response
 from sqlalchemy import select
@@ -72,7 +72,29 @@ def delete_child(
     db: Session = Depends(get_db),
 ) -> None:
     child = get_child_or_404(parent, child_id, db)
-    child.deleted_at = datetime.now(timezone.utc)
+    child.deleted_at = datetime.now(UTC)
+    db.commit()
+
+
+@router.delete("/{child_id}/data", status_code=204, dependencies=[Depends(require_requested_with)])
+def delete_child_data(
+    child_id: uuid.UUID,
+    parent: Parent = Depends(get_current_parent),
+    db: Session = Depends(get_db),
+) -> None:
+    """Privacy control: delete all of this child's collected data; keep the child and device."""
+    child = get_child_or_404(parent, child_id, db)
+    from ..models import (
+        Alert,
+        AppUsageDaily,
+        Command,
+        EmotionEvent,
+        LedgerEvent,
+        ScreenSession,
+    )
+
+    for model in (EmotionEvent, LedgerEvent, AppUsageDaily, ScreenSession, Alert, Command):
+        db.query(model).filter(model.child_id == child.id).delete(synchronize_session=False)
     db.commit()
 
 

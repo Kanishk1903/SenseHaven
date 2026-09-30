@@ -1,5 +1,4 @@
 """Parent auth: register / login / logout / me (P2.3)."""
-from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, Request, Response
 from sqlalchemy import select

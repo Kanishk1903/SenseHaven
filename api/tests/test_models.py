@@ -1,10 +1,9 @@
 """P2.2 — schema constraints actually reject bad data; cascade delete removes child data."""
-import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
 from api.app.models import (
     Alert,
@@ -44,7 +43,7 @@ def test_duplicate_emotion_client_uuid_rejected(client, db_session=None):
 
     with SessionLocal() as db:
         child = make_child(db)
-        ts = datetime.now(timezone.utc)
+        ts = datetime.now(UTC)
         db.add(
             EmotionEvent(
                 child_id=child.id, client_uuid="evt-1", ts=ts, calm_index=70,
@@ -69,14 +68,14 @@ def test_duplicate_ledger_client_uuid_rejected(client):
         child = make_child(db)
         db.add(
             LedgerEvent(
-                child_id=child.id, client_uuid="led-1", ts=datetime.now(timezone.utc),
+                child_id=child.id, client_uuid="led-1", ts=datetime.now(UTC),
                 kind="bonus", seconds=600,
             )
         )
         db.commit()
         db.add(
             LedgerEvent(
-                child_id=child.id, client_uuid="led-1", ts=datetime.now(timezone.utc),
+                child_id=child.id, client_uuid="led-1", ts=datetime.now(UTC),
                 kind="bonus", seconds=600,
             )
         )
@@ -104,7 +103,7 @@ def test_revoked_device_frees_child_slot(client):
         first = Device(child_id=child.id, token_hash="t1", name="Old phone")
         db.add(first)
         db.commit()
-        first.revoked_at = datetime.now(timezone.utc)
+        first.revoked_at = datetime.now(UTC)
         db.commit()
         db.add(Device(child_id=child.id, token_hash="t2", name="New phone"))
         db.commit()  # must not raise
@@ -133,7 +132,7 @@ def test_cascade_delete_child_removes_data(client):
     with SessionLocal() as db:
         parent = make_parent(db)
         child = make_child(db, parent)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         session = ScreenSession(child_id=child.id, status="active", granted_s=3600, started_at=now)
         db.add(session)
         db.flush()

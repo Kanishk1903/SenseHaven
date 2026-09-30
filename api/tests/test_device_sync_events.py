@@ -1,6 +1,6 @@
 """P2.6 — sync versioning, idempotent ingest, monotonic used_s, command lifecycle, alerts."""
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from api.app.db import SessionLocal
 from api.app.models import Alert, Device, EmotionEvent, LedgerEvent, ScreenSession
@@ -20,7 +20,7 @@ def paired(client) -> dict:
 
 
 def iso_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def emotion_items(n=1, session_id=None, **overrides) -> list[dict]:
@@ -164,7 +164,9 @@ def test_stress_alert_dedupe_per_10min_bucket(parent_client):
     ctx = paired(parent_client)
     snap = session_snapshot(status="active", used_s=400)
     post_events(parent_client, ctx, sessions=[snap])
-    ts = datetime.now(timezone.utc)
+    # Anchor inside a 10-minute bucket so +5 min stays in-bucket and +15 min lands in the next.
+    bucket_start = int(datetime.now(UTC).timestamp() // 600) * 600
+    ts = datetime.fromtimestamp(bucket_start, UTC) + timedelta(minutes=1)
     post_events(
         parent_client,
         ctx,
@@ -202,7 +204,10 @@ def test_permission_revoked_once_per_day(parent_client):
     # same-day repeats stay deduped; a different grant gets its own alert
     post_events(parent_client, ctx, heartbeat={"used_s": 30, "camera_ok": True, "permissions": {**perms, "camera": True}})
     post_events(parent_client, ctx, heartbeat={"used_s": 40, "camera_ok": False, "permissions": {**perms, "camera": False}})
-    post_events(parent_client, ctx, heartbeat={"used_s": 50, "camera_ok": False, "permissions": {**perms, "notifications": False}})
+    post_events(
+        parent_client, ctx,
+        heartbeat={"used_s": 50, "camera_ok": False, "permissions": {**perms, "notifications": False}},
+    )
     with SessionLocal() as db:
         assert db.query(Alert).filter(Alert.kind == "permission_revoked").count() == 2
 
@@ -213,7 +218,7 @@ def test_command_lifecycle(parent_client):
         command = enqueue_command(db, uuid.UUID(ctx["child"]["id"]), "add_time", {"delta_s": 300})
         command_id = command.id
         expired = enqueue_command(db, uuid.UUID(ctx["child"]["id"]), "lock_now", {})
-        expired.expires_at = datetime.now(timezone.utc) - timedelta(seconds=1)
+        expired.expires_at = datetime.now(UTC) - timedelta(seconds=1)
         db.commit()
 
     listed = sync(parent_client, ctx).json()["commands"]
@@ -229,7 +234,7 @@ def test_expired_command_not_returned(parent_client):
     ctx = paired(parent_client)
     with SessionLocal() as db:
         command = enqueue_command(db, uuid.UUID(ctx["child"]["id"]), "add_time", {"delta_s": 300})
-        command.expires_at = datetime.now(timezone.utc) - timedelta(seconds=1)
+        command.expires_at = datetime.now(UTC) - timedelta(seconds=1)
         db.commit()
     assert sync(parent_client, ctx).json()["commands"] == []
 
@@ -246,7 +251,8 @@ def test_malformed_items_422(parent_client):
     assert post_events(parent_client, ctx, emotion=emotion_items(1, calm_index=150)).status_code == 422
     assert post_events(parent_client, ctx, emotion=emotion_items(1, label="furious")).status_code == 422
     assert post_events(parent_client, ctx, emotion=emotion_items(1, unexpected_field=1)).status_code == 422
-    assert post_events(parent_client, ctx, app_usage=[{"date": "2026-09-30", "package": "com.x", "seconds": -5}]).status_code == 422
+    bad_usage = [{"date": "2026-09-30", "package": "com.x", "seconds": -5}]
+    assert post_events(parent_client, ctx, app_usage=bad_usage).status_code == 422
 
 
 def test_heartbeat_route_updates_device(parent_client):
@@ -258,7 +264,10 @@ def test_heartbeat_route_updates_device(parent_client):
     )
     assert response.status_code == 200
     with SessionLocal() as db:
-        device = db.query(Device).filter(Device.token_hash == __import__("hashlib").sha256(ctx["token"].encode()).hexdigest()).one()
+        import hashlib
+
+        token_hash = hashlib.sha256(ctx["token"].encode()).hexdigest()
+        device = db.query(Device).filter(Device.token_hash == token_hash).one()
         assert device.battery_pct == 55
         assert device.permissions["camera_ok"] is False
         assert device.last_seen_at is not None

@@ -1,6 +1,6 @@
 """P2.5 — pairing codes (TTL, single-use, attempts) and device pairing (revoke, throttle)."""
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from fastapi.testclient import TestClient
 
@@ -98,7 +98,7 @@ def test_expired_code_410_and_burns_attempt(parent_client):
     code_hash = __import__("hashlib").sha256((code + "test-only-pepper-not-for-production").encode()).hexdigest()
     with SessionLocal() as db:
         row = db.query(PairingCode).filter(PairingCode.code_hash == code_hash).one()
-        row.expires_at = datetime.now(timezone.utc) - timedelta(seconds=1)
+        row.expires_at = datetime.now(UTC) - timedelta(seconds=1)
         db.commit()
     response = pair(parent_client, code)
     assert response.status_code == 410

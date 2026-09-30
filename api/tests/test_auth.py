@@ -1,6 +1,6 @@
 """P2.3 — auth, throttling, cookie flags, PIN."""
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import jwt as pyjwt
 
@@ -117,7 +117,7 @@ def test_tampered_jwt_401(client):
 
 
 def test_expired_jwt_401(client):
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     settings = get_settings()
     expired = pyjwt.encode(
         {"sub": str(uuid.uuid4()), "iat": now - timedelta(days=15), "exp": now - timedelta(seconds=10)},

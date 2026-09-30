@@ -3,7 +3,7 @@ import hashlib
 import hmac
 import secrets
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import argon2
 import jwt
@@ -45,7 +45,7 @@ def verify_pin(pin: str, salt_hex: str, expected_hex: str, iterations: int) -> b
 
 def create_session_token(parent_id: uuid.UUID) -> str:
     settings = get_settings()
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     payload = {
         "sub": str(parent_id),
         "iat": now,
