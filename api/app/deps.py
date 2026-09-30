@@ -1,13 +1,15 @@
-"""Shared FastAPI dependencies (P2.1+): db session, parent session, CSRF-style header."""
+"""Shared FastAPI dependencies (P2.1+): db session, parent session, device bearer, CSRF-style header."""
+import hashlib
 import uuid
 from collections.abc import Generator
 
 import jwt
 from fastapi import Depends, Request
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .db import SessionLocal
-from .models import Parent
+from .models import Device, Parent
 from .problems import ApiError
 from .security.hashing import SESSION_COOKIE, decode_session_token
 
@@ -46,3 +48,29 @@ def get_current_parent(request: Request, db: Session = Depends(get_db)) -> Paren
     if parent is None:
         raise ApiError(401, "UNAUTHENTICATED", "Your session ended. Sign in again to keep going.")
     return parent
+
+
+def get_current_device(request: Request, db: Session = Depends(get_db)) -> Device:
+    """Bearer-token device auth. A device may only ever touch its own child's data."""
+    auth = request.headers.get("Authorization", "")
+    if not auth.startswith("Bearer "):
+        raise ApiError(
+            401,
+            "DEVICE_TOKEN_INVALID",
+            "This phone isn't paired any more. Open the app and pair with a new code.",
+        )
+    token_hash = hashlib.sha256(auth[7:].encode()).hexdigest()
+    device = db.scalar(select(Device).where(Device.token_hash == token_hash))
+    if device is None:
+        raise ApiError(
+            401,
+            "DEVICE_TOKEN_INVALID",
+            "This phone isn't paired any more. Open the app and pair with a new code.",
+        )
+    if device.revoked_at is not None:
+        raise ApiError(
+            401,
+            "DEVICE_REVOKED",
+            "This phone was unpaired from the parent dashboard. Pair again to reconnect.",
+        )
+    return device

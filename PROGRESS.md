@@ -51,3 +51,4 @@ One line per event: `YYYY-MM-DD HH:MM · phase N · slice X · ✅|⚠|❌ · no
 2026-09-30 10:45 · phase 2 · P2.2 · ✅ · 10 lean tables + constraint/cascade tests (dup client_uuid, single active device, dedupe_key, cascade delete) — 14 tests green
 2026-09-30 10:48 · phase 2 · P2.3 · ✅ · argon2id auth, JWT cookie (flags per ENV), X-Requested-With guard, login throttle 5/15min, PBKDF2 pin (210k, pin_version bump) — 30 tests green, 95% cov
 2026-09-30 10:50 · phase 2 · P2.4 · ✅ · children CRUD + settings deep-merge (config_version per PATCH, extra=forbid, package pattern) + contract-parity test — 45 tests green
+2026-09-30 10:54 · phase 2 · P2.5 · ✅ · pairing codes (peppered sha256, 10-min TTL, single-use, attempts) + device pair (token sha256, previous revoked D-19, 10/h/IP limiter, PIN verifier) — 55 tests green
