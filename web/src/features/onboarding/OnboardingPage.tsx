@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { PinInput } from "@/components/PinInput";
+import { useQueryClient } from "@tanstack/react-query";
+
 import { api, ApiError } from "@/lib/api";
 import { useChildren, useMe } from "@/lib/queries";
 import { handleApiError } from "@/lib/handleApiError";
@@ -14,6 +16,7 @@ const STEPS = ["Add your child", "Set your device PIN", "Pair the phone"];
 
 export function OnboardingPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: me } = useMe();
   const { data: children } = useChildren();
   const [step, setStep] = useState(0);
@@ -41,7 +44,14 @@ export function OnboardingPage() {
       </ol>
 
       <div className="mt-6">
-        {step === 0 ? <StepAddChild onDone={() => setStep(1)} /> : null}
+        {step === 0 ? (
+          <StepAddChild
+            onDone={() => {
+              void queryClient.invalidateQueries({ queryKey: ["children"] });
+              setStep(1);
+            }}
+          />
+        ) : null}
         {step === 1 ? <StepSetPin onDone={() => setStep(2)} /> : null}
         {step === 2 ? <StepPair onDone={() => navigate("/")} /> : null}
       </div>

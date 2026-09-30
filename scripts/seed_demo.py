@@ -26,6 +26,7 @@ from api.app.models import (
     Alert,
     AppUsageDaily,
     Child,
+    Device,
     EmotionEvent,
     LedgerEvent,
     Parent,
@@ -200,12 +201,91 @@ def seed_history(db, child: Child) -> None:
     print(f"seeded {DAYS} days of history for Aarav")
 
 
+def ensure_device(db, child: Child) -> None:
+    import hashlib
+
+    token = "demo-device-token-not-a-secret"
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    existing = db.scalar(select(Device).where(Device.token_hash == token_hash))
+    if existing is not None:
+        existing.last_seen_at = datetime.now(timezone.utc)
+        db.commit()
+        print("demo device refreshed")
+        return
+    db.add(Device(child_id=child.id, token_hash=token_hash, name="Aarav's phone",
+                  android_version="14", app_version="1.0.0", last_seen_at=datetime.now(timezone.utc),
+                  battery_pct=76, permissions={"camera": True, "notifications": True,
+                                               "usage_access": True, "overlay": True, "camera_ok": False}))
+    db.commit()
+    print("created demo device (token: demo-device-token-not-a-secret)")
+
+
+def seed_today(db, child: Child) -> None:
+    """A session 'running now' so the Overview has live content."""
+    rng = random.Random(SEED)
+    now = datetime.now(timezone.utc)
+    # one unread demo alert per day (restore happens even when the session already exists)
+    dedupe = f"seed-today-{now.date().isoformat()}"
+    existing_alert = db.scalar(select(Alert).where(Alert.dedupe_key == dedupe))
+    if existing_alert is not None:
+        existing_alert.read_at = None
+    else:
+        db.add(Alert(parent_id=child.parent_id, child_id=child.id, kind="stress_alert",
+                     severity="warning", dedupe_key=dedupe,
+                     title="Aarav had a stressful stretch — a 5-minute breather was started",
+                     body="SenseHeaven noticed a long run of stress signals and started a breather."))
+    db.commit()
+    current = db.scalar(
+        select(ScreenSession).where(ScreenSession.child_id == child.id,
+                                    ScreenSession.status.in_(("active", "cooldown", "pending")))
+    )
+    if current is not None:
+        print("today's session already present")
+        return
+    # re-seed cleanly: drop today's seed-scoped events + usage rows (ids are random per run)
+    db.query(EmotionEvent).filter(
+        EmotionEvent.child_id == child.id, EmotionEvent.client_uuid.like("seed-today-%")
+    ).delete(synchronize_session=False)
+    db.query(AppUsageDaily).filter(
+        AppUsageDaily.child_id == child.id, AppUsageDaily.date == now.date()
+    ).delete(synchronize_session=False)
+    started = now - timedelta(minutes=210)
+    session = ScreenSession(child_id=child.id, status="active", granted_s=14400, used_s=12600,
+                            bonus_s=600, started_at=started, source="parent_web")
+    db.add(session)
+    db.flush()
+    for minute in range(0, 211, 10):
+        ts = started + timedelta(minutes=minute)
+        # one stress dip mid-session so the chart shows all three bands in use
+        if 95 <= minute <= 115:
+            calm_index = rng.randint(18, 30)
+            label = "stressed"
+        elif minute > 115:
+            calm_index = rng.randint(58, 74)
+            label = "neutral" if calm_index < 70 else "calm"
+        else:
+            calm_index = rng.randint(72, 92)
+            label = "calm"
+        db.add(EmotionEvent(child_id=child.id, session_id=session.id,
+                            client_uuid=f"seed-today-{minute}-{uuid.uuid4()}",
+                            ts=ts, calm_index=calm_index, label=label,
+                            face_present=True, quality=0.9))
+    db.add(AppUsageDaily(child_id=child.id, date=now.date(), package="com.google.android.youtube",
+                         label="YouTube", seconds=900))
+    db.add(AppUsageDaily(child_id=child.id, date=now.date(), package="com.android.chrome",
+                         label="Chrome", seconds=420))
+    db.commit()
+    print("seeded today's live session")
+
+
 def main() -> int:
     Base.metadata.create_all(engine)
     with SessionLocal() as db:
         parent = ensure_parent(db)
         child = ensure_child(db, parent)
         seed_history(db, child)
+        ensure_device(db, child)
+        seed_today(db, child)
     print("seed complete")
     return 0
 

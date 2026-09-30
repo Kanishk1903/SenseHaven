@@ -1,0 +1,21 @@
+
+ RUN  v2.1.9 /Users/kanishkgupta/Desktop/aakhribaar_glm/web
+
+ ✓ src/test/helpers.test.ts (7 tests) 33ms
+ ✓ src/test/presentational.test.tsx (12 tests) 75ms
+ ✓ src/components/components.test.tsx (7 tests) 185ms
+stderr | src/features/auth/auth.test.tsx > auth pages (P4.7) > LoginPage shows inline validation on blur and never submits invalid data
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/lib/api.test.ts (7 tests) 717ms
+   ✓ api client error mapping (P4.1) > retries a failed GET once then maps to NETWORK 380ms
+   ✓ api client error mapping (P4.1) > retries a 5xx GET once and succeeds 331ms
+ ✓ src/features/auth/auth.test.tsx (8 tests) 475ms
+
+ Test Files  5 passed (5)
+      Tests  41 passed (41)
+   Start at  13:34:32
+   Duration  1.58s (transform 254ms, setup 258ms, collect 1.04s, tests 1.49s, environment 1.58s, prepare 242ms)
+
+check_unit_count: could not parse vitest output

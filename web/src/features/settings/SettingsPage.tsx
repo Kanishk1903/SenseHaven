@@ -86,7 +86,7 @@ export function SettingsPage() {
     },
   });
 
-  if (settings.isLoading || !draft) {
+  if (!child || settings.isPending || !draft) {
     return (
       <div>
         <PageHeader title="Settings" description="Loading…" />
@@ -451,7 +451,7 @@ function DeviceCard() {
   const [confirmRevoke, setConfirmRevoke] = useState<string | null>(null);
   const device = devices.data?.find((row) => row.revoked_at === null);
 
-  if (devices.isLoading) return <SkeletonCard lines={4} />;
+  if (!child || devices.isPending) return <SkeletonCard lines={4} />;
   if (!device) {
     return (
       <Card>

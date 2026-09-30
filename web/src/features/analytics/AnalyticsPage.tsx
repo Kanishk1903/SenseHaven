@@ -80,7 +80,7 @@ function EmotionTab() {
         <p className="text-caption text-text-subtle">Bands: calm ≥ 70 · stressed &lt; 35</p>
       </div>
 
-      {timeline.isLoading ? (
+      {!child || timeline.isPending ? (
         <SkeletonCard lines={6} />
       ) : timeline.isError ? (
         <ErrorState message={timeline.error.message} onRetry={() => void timeline.refetch()} />
@@ -152,17 +152,34 @@ function EmotionTab() {
   );
 }
 
+function minuteOfDay(iso: string): number {
+  const date = new Date(iso);
+  return date.getHours() * 60 + date.getMinutes();
+}
+
 function EmotionChart({ points }: { points: { t: string; value: number | null }[] }) {
   const [showTable, setShowTable] = useState(false);
-  const sampled = points.filter((_, index) => index % 5 === 0);
   const width = 800;
   const height = 200;
-  const coords = sampled
-    .map((point, index) => ({ x: (index / Math.max(sampled.length - 1, 1)) * width, value: point.value, t: point.t }))
+  // x is time-proportional across the whole day — gaps stay gaps, never re-scaled.
+  const coords = points
+    .map((point) => ({ x: (minuteOfDay(point.t) / 1439) * width, value: point.value, t: point.t }))
     .filter((point): point is { x: number; value: number; t: string } => point.value !== null);
-  const path = coords
-    .map((point, index) => `${index === 0 ? "M" : "L"}${point.x.toFixed(1)},${(height - (point.value / 100) * height).toFixed(1)}`)
-    .join(" ");
+  const segments: string[] = [];
+  let current: string[] = [];
+  for (const point of coords) {
+    if (current.length === 0 || point.x - xOf(current[current.length - 1]) <= 15) {
+      current.push(`${current.length === 0 ? "M" : "L"}${point.x.toFixed(1)},${(height - (point.value / 100) * height).toFixed(1)}`);
+    } else {
+      segments.push(current.join(" "));
+      current = [`M${point.x.toFixed(1)},${(height - (point.value / 100) * height).toFixed(1)}`];
+    }
+    function xOf(command: string): number {
+      return Number(command.split(/[ML]/)[1]?.split(",")[0] ?? 0);
+    }
+  }
+  if (current.length > 0) segments.push(current.join(" "));
+  const path = segments.join(" ");
 
   return (
     <div>
@@ -175,7 +192,7 @@ function EmotionChart({ points }: { points: { t: string; value: number | null }[
             </tr>
           </thead>
           <tbody className="tnum">
-            {coords.map((point) => (
+            {coords.slice(0, 200).map((point) => (
               <tr key={point.t}>
                 <td className="py-0.5">{new Date(point.t).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</td>
                 <td className="py-0.5">{point.value}</td>
@@ -189,7 +206,10 @@ function EmotionChart({ points }: { points: { t: string; value: number | null }[
           <rect x="0" y={height * 0.65} width={width} height={height * 0.35} fill="var(--stress-soft)" opacity="0.6" />
           <line x1="0" y1={height * 0.3} x2={width} y2={height * 0.3} stroke="var(--border)" />
           <line x1="0" y1={height * 0.65} x2={width} y2={height * 0.65} stroke="var(--border)" />
-          <path d={path} fill="none" stroke="var(--calm)" strokeWidth="2" />
+          <path d={path} fill="none" stroke="var(--calm)" strokeWidth="2" strokeLinecap="round" />
+          {coords.map((point) => (
+            <circle key={point.t} cx={point.x} cy={height - (point.value / 100) * height} r={3.5} fill="var(--calm)" />
+          ))}
         </svg>
       )}
       <button type="button" className="mt-1 text-caption text-primary underline" onClick={() => setShowTable((value) => !value)}>
@@ -240,7 +260,7 @@ function ScreenTimeTab() {
           <CardTitle>Top apps ({range === "7d" ? "7" : "30"} days)</CardTitle>
         </CardHeader>
         <CardContent>
-          {daily.isLoading || usage.isLoading ? (
+          {!child || daily.isPending || usage.isPending ? (
             <SkeletonCard lines={5} />
           ) : daily.data && daily.data.items.length > 0 ? (
             <DataTable columns={columns} rows={daily.data.items} getRowKey={(row) => row.package} />
@@ -278,7 +298,7 @@ function SessionsTab() {
     },
   ];
 
-  if (sessions.isLoading) return <SkeletonCard lines={6} />;
+  if (!child || sessions.isPending) return <SkeletonCard lines={6} />;
   if (sessions.isError) return <ErrorState message={sessions.error.message} onRetry={() => void sessions.refetch()} />;
   const rows = sessions.data ?? [];
 

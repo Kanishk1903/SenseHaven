@@ -70,8 +70,7 @@ web-types:
 	else echo "web/ is empty — web types arrive in Phase 4 (gate-4)"; fi
 
 web-e2e:
-	@if [ -f web/package.json ]; then cd web && npx playwright test; \
-	else echo "web/ is empty — web e2e arrives in Phase 4 (gate-4)"; fi
+	bash scripts/web_e2e.sh
 
 up:
 	docker compose up -d db

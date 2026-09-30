@@ -145,8 +145,20 @@ export function Shell() {
             <Link to="/" className="mb-6 flex items-center gap-2 px-2 py-1 font-semibold">
               <OrbMark size={24} /> SenseHeaven
             </Link>
-            <div className="mb-4 px-1">
+            <div className="mb-4 flex items-center justify-between px-1">
               <ChildSwitcher />
+              <Link
+                to="/alerts"
+                aria-label={unread > 0 ? `${unread} unread alerts` : "Alerts"}
+                className="relative rounded-input p-2 text-text-muted hover:bg-surface-2 hover:text-text"
+              >
+                <Bell size={18} aria-hidden />
+                {unread > 0 ? (
+                  <span className="tnum absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-pill bg-stress px-1 text-[10px] font-semibold text-on-primary">
+                    {unread}
+                  </span>
+                ) : null}
+              </Link>
             </div>
             <NavLinks />
           </div>
@@ -197,6 +209,6 @@ export function RequireAuth() {
   if (me.isError) {
     return <Navigate to="/login" replace />;
   }
-  return <Shell />;
+  return <Outlet />;
 }
 

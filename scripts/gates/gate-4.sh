@@ -1,0 +1,12 @@
+# GATE 4 — parent web dashboard (docs/spec/03-phases-and-gates-lean.md §GATE 4).
+check "types" "cd web && npx tsc --noEmit && npm run types && git diff --exit-code -- src/lib/api-types.ts && echo 'types clean + api-types unchanged'"
+check "lint" "cd web && npm run lint"
+check "unit" "bash scripts/check_unit_count.sh"
+check "build" "cd web && npm run build && size=\$(gzip -c dist/assets/index-*.js | wc -c); test \"\$size\" -le 409600 && echo \"initial JS: \$((size / 1024)) KB gzip <= 400 KB\""
+check "e2e" "bash scripts/web_e2e.sh"
+check "screenshots" "count390=\$(ls verification/screenshots/web/*-390.png 2>/dev/null | wc -l | tr -d ' '); count1440=\$(ls verification/screenshots/web/*-1440.png 2>/dev/null | wc -l | tr -d ' '); total=\$(ls verification/screenshots/web/*.png | wc -l | tr -d ' '); test \"\$total\" -ge 10 && test \"\$count390\" -ge 5 && test \"\$count1440\" -ge 5 && echo \"screenshots: \$total files (390px: \$count390, 1440px: \$count1440)\""
+check "rubric" "python3 scripts/check_rubric.py"
+check "contrast" "python3 scripts/check_contrast.py"
+check "production serve" "bash scripts/check_prod_serve.sh"
+check "placeholders" "bash scripts/no_placeholders.sh"
+check "regression: previous gate" "bash scripts/gate.sh 3"

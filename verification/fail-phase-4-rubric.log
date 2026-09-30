@@ -1,0 +1,4 @@
+  File "<string>", line 1
+    \nimport re, pathlib\ntext = pathlib.Path('verification/ui-rubric-web.md').read_text()\nm = re.search(r'Overall pass rate: (\d+)/(\d+)', text)\nassert m, 'rubric overall line missing'\nrate = int(m.group(1)) / int(m.group(2))\nassert rate >= 0.80, f'rubric {rate:.0%} < 80%'\nprint(f'rubric pass rate {rate:.0%} >= 80%')
+     ^
+SyntaxError: unexpected character after line continuation character

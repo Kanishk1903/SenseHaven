@@ -1,0 +1,74 @@
+{
+  "phase": 4,
+  "timestamp": "2026-09-30T08:12:52+00:00",
+  "checks": [
+    {
+      "name": "types",
+      "cmd": "cd web && npx tsc --noEmit && npm run types && git diff --exit-code -- src/lib/api-types.ts && echo 'types clean + api-types unchanged'",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "lint",
+      "cmd": "cd web && npm run lint",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "unit",
+      "cmd": "bash scripts/check_unit_count.sh",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "build",
+      "cmd": "cd web && npm run build && size=$(gzip -c dist/assets/index-*.js | wc -c); test \"$size\" -le 409600 && echo \"initial JS: $((size / 1024)) KB gzip <= 400 KB\"",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "e2e",
+      "cmd": "bash scripts/web_e2e.sh",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "screenshots",
+      "cmd": "count390=$(ls verification/screenshots/web/*-390.png 2>/dev/null | wc -l | tr -d ' '); count1440=$(ls verification/screenshots/web/*-1440.png 2>/dev/null | wc -l | tr -d ' '); total=$(ls verification/screenshots/web/*.png | wc -l | tr -d ' '); test \"$total\" -ge 10 && test \"$count390\" -ge 5 && test \"$count1440\" -ge 5 && echo \"screenshots: $total files (390px: $count390, 1440px: $count1440)\"",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "rubric",
+      "cmd": "python3 scripts/check_rubric.py",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "contrast",
+      "cmd": "python3 scripts/check_contrast.py",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "production serve",
+      "cmd": "bash scripts/check_prod_serve.sh",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "placeholders",
+      "cmd": "bash scripts/no_placeholders.sh",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "regression: previous gate",
+      "cmd": "bash scripts/gate.sh 3",
+      "exit": 0,
+      "pass": true
+    }
+  ],
+  "verdict": "PASS",
+  "fallback_applied": false
+}

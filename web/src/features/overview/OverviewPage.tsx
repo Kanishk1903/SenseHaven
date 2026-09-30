@@ -26,6 +26,11 @@ import {
 } from "@/features/apiHooks";
 import { useChild } from "@/app/childSelection";
 import { formatDuration } from "@/lib/format";
+
+function minuteOfDay(iso: string): number {
+  const date = new Date(iso);
+  return date.getHours() * 60 + date.getMinutes();
+}
 import { useChildren } from "@/lib/queries";
 import { handleApiError } from "@/lib/handleApiError";
 
@@ -136,7 +141,7 @@ function LiveStatusCard() {
   const command = useSessionCommand(child?.id);
   const timeline = useTimeline(child?.id, new Date().toISOString().slice(0, 10));
 
-  if (live.isLoading) return <SkeletonCard lines={6} className="h-full" />;
+  if (!child || live.isPending) return <SkeletonCard lines={6} className="h-full" />;
   if (live.isError) {
     return (
       <ErrorState
@@ -241,7 +246,7 @@ function LiveStatusCard() {
 function TodayKpis() {
   const { child } = useChild();
   const overview = useOverview(child?.id, "today");
-  if (overview.isLoading) return <SkeletonCard lines={4} />;
+  if (!child || overview.isPending) return <SkeletonCard lines={4} />;
   if (overview.isError) return <ErrorState message={overview.error.message} onRetry={() => void overview.refetch()} />;
   const data = overview.data!;
   return (
@@ -257,10 +262,10 @@ function TodayKpis() {
 function CalmTimelineCard() {
   const { child } = useChild();
   const timeline = useTimeline(child?.id, new Date().toISOString().slice(0, 10));
-  if (timeline.isLoading) return <SkeletonCard lines={5} />;
+  if (!child || timeline.isPending) return <SkeletonCard lines={5} />;
   if (timeline.isError) return <ErrorState message={timeline.error.message} onRetry={() => void timeline.refetch()} />;
-  const buckets = timeline.data!.buckets.filter((_, index) => index % 5 === 0); // 5-min resolution for display
-  const hasData = timeline.data!.buckets.some((bucket) => bucket.value !== null);
+  const buckets = timeline.data!.buckets;
+  const hasData = buckets.some((bucket) => bucket.value !== null);
   return (
     <Card>
       <CardHeader>
@@ -282,11 +287,14 @@ function CalmTimelineCard() {
 }
 
 function TimelineChart({ buckets }: { buckets: { t: string; value: number | null }[] }) {
-  // Recharts is imported lazily by the analytics page; here we render a compact SVG line.
   const width = 600;
   const height = 150;
+  // x proportional to minute-of-day; gaps stay gaps (never re-scaled or interpolated).
   const points = buckets
-    .map((bucket, index) => ({ x: (index / Math.max(buckets.length - 1, 1)) * width, value: bucket.value }))
+    .map((bucket) => ({
+      x: (minuteOfDay(bucket.t) / 1439) * width,
+      value: bucket.value,
+    }))
     .filter((point): point is { x: number; value: number } => point.value !== null);
   if (points.length === 0) return null;
   const path = points
@@ -299,7 +307,10 @@ function TimelineChart({ buckets }: { buckets: { t: string; value: number | null
     <svg viewBox={`0 0 ${width} ${height}`} className="h-40 w-full" role="img" aria-label="Calm index timeline for today">
       <line x1="0" y1={height - 0.7 * height} x2={width} y2={height - 0.7 * height} stroke="var(--border)" strokeDasharray="4 4" />
       <line x1="0" y1={height - 0.35 * height} x2={width} y2={height - 0.35 * height} stroke="var(--border)" strokeDasharray="4 4" />
-      <path d={path} fill="none" stroke="var(--calm)" strokeWidth="2" />
+      <path d={path} fill="none" stroke="var(--calm)" strokeWidth="2" strokeLinecap="round" />
+      {points.map((point, index) => (
+        <circle key={index} cx={point.x} cy={height - (point.value / 100) * height} r={3.5} fill="var(--calm)" />
+      ))}
     </svg>
   );
 }
@@ -346,7 +357,7 @@ function AlertsFeed() {
 function TopAppsCard() {
   const { child } = useChild();
   const usage = useAppUsage(child?.id, "today");
-  if (usage.isLoading) return <SkeletonCard lines={3} />;
+  if (!child || usage.isPending) return <SkeletonCard lines={3} />;
   if (usage.isError) return <ErrorState message={usage.error.message} onRetry={() => void usage.refetch()} />;
   const items = usage.data!.items.slice(0, 5);
   const max = Math.max(...items.map((item) => item.seconds), 1);

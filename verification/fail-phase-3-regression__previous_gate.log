@@ -1,0 +1,21 @@
+PASS tests
+PASS no-skips
+PASS idor
+PASS security
+PASS openapi
+PASS virtual child
+FAIL lint (exit 1) — last lines:
+    All checks passed!
+    EXE001 Shebang is present but file is not executable
+     --> scripts/check_rubric.py:1:1
+      |
+    1 | #!/usr/bin/env python3
+      | ^^^^^^^^^^^^^^^^^^^^^^
+    2 | """Gate-4 helper: assert the committed UI rubric pass rate is >= 80 % (LEAN §1.3)."""
+    3 | import pathlib
+      |
+    
+    Found 1 error.
+PASS placeholders
+PASS regression: previous gate
+gate-2: verdict FAIL — written to verification/phase-2.json

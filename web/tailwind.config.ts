@@ -9,9 +9,10 @@ export default {
   theme: {
     extend: {
       colors: tokens.colors,
+      // spacing intentionally NOT extended: the default Tailwind scale already is the
+      // 4-pt grid, and pixel-valued token keys (8 = 8px) would shadow w-8/h-12 etc.
       fontFamily: tokens.fontFamily,
       fontSize: tokens.fontSize,
-      spacing: tokens.spacing,
       borderRadius: tokens.borderRadius,
       boxShadow: tokens.boxShadow,
       transitionDuration: tokens.transitionDuration,
