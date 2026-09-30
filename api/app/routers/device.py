@@ -1,4 +1,4 @@
-"""Device API (P2.5: pair; P2.6 adds sync/events/ack/heartbeat)."""
+"""Device API (P2.5: pair; P2.6: sync, events, commands ack, heartbeat)."""
 import base64
 import hashlib
 import secrets
@@ -11,9 +11,11 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..deps import get_current_device, get_db
-from ..models import Child, Device, Parent
+from ..models import Child, Command, Device, Parent
 from ..problems import ApiError
+from ..schemas.device import EventsBatchIn, HeartbeatIn
 from ..security.limiter import limiter
+from ..services.events import current_session, ingest_events, _apply_heartbeat
 from ..services.pairing import find_known_code, find_usable_code
 
 router = APIRouter(prefix="/device", tags=["device"])
@@ -27,6 +29,17 @@ class PairIn(BaseModel):
     device_name: str = Field(min_length=1, max_length=80)
     android_version: str = Field(default="", max_length=20)
     app_version: str = Field(default="", max_length=20)
+
+
+def _pin_payload(parent: Parent) -> dict | None:
+    if parent.pin_hash is None:
+        return None
+    return {
+        "algo": "pbkdf2-sha256",
+        "iterations": parent.pin_iterations,
+        "salt_b64": base64.b64encode(bytes.fromhex(parent.pin_salt)).decode(),
+        "hash_b64": base64.b64encode(bytes.fromhex(parent.pin_hash)).decode(),
+    }
 
 
 def _pair_throttle_key(request: Request) -> str:
@@ -79,20 +92,86 @@ def pair(body: PairIn, request: Request, db: Session = Depends(get_db)) -> dict:
     db.add(device)
     db.commit()
 
-    pin_payload = None
-    if parent.pin_hash is not None:
-        pin_payload = {
-            "algo": "pbkdf2-sha256",
-            "iterations": parent.pin_iterations,
-            "salt_b64": base64.b64encode(bytes.fromhex(parent.pin_salt)).decode(),
-            "hash_b64": base64.b64encode(bytes.fromhex(parent.pin_hash)).decode(),
-        }
-
     return {
         "device_token": token,
         "child": {"id": str(child.id), "name": child.name},
         "config_version": child.settings.get("config_version", 1),
         "config": child.settings,
-        "pin": pin_payload,
+        "pin": _pin_payload(parent),
         "pin_version": parent.pin_version,
     }
+
+
+@router.get("/sync")
+def sync(
+    config_version: int | None = None,
+    pin_version: int | None = None,
+    device: Device = Depends(get_current_device),
+    db: Session = Depends(get_db),
+) -> dict:
+    now = datetime.now(timezone.utc)
+    device.last_seen_at = now
+    child = db.get(Child, device.child_id)
+    parent = db.get(Parent, child.parent_id)
+
+    config = None
+    if config_version is None or child.settings.get("config_version", 1) != config_version:
+        config = child.settings
+    pin = None
+    if parent.pin_hash is not None and (pin_version is None or parent.pin_version != pin_version):
+        pin = _pin_payload(parent)
+
+    session = current_session(db, child.id)
+    commands = db.scalars(
+        select(Command)
+        .where(Command.child_id == child.id, Command.acked_at.is_(None), Command.expires_at > now)
+        .order_by(Command.created_at)
+    ).all()
+    db.commit()
+
+    return {
+        "server_time": now.isoformat(),
+        "config_version": child.settings.get("config_version", 1),
+        "config": config,
+        "pin": pin,
+        "pin_version": parent.pin_version,
+        "session": None
+        if session is None
+        else {
+            "id": str(session.id),
+            "status": session.status,
+            "granted_s": session.granted_s,
+            "bonus_s": session.bonus_s,
+            "penalty_s": session.penalty_s,
+            "used_s": session.used_s,
+        },
+        "commands": [
+            {"id": command.id, "kind": command.kind, "payload": command.payload, "created_at": command.created_at.isoformat()}
+            for command in commands
+        ],
+    }
+
+
+@router.post("/events")
+def events(batch: EventsBatchIn, device: Device = Depends(get_current_device), db: Session = Depends(get_db)) -> dict:
+    return ingest_events(db, device, batch)
+
+
+@router.post("/commands/{command_id}/ack", status_code=204)
+def ack_command(
+    command_id: int, device: Device = Depends(get_current_device), db: Session = Depends(get_db)
+) -> None:
+    command = db.get(Command, command_id)
+    if command is None or command.child_id != device.child_id:
+        raise ApiError(404, "NOT_FOUND", "We couldn't find that. It may have been removed — head back and try again.")
+    now = datetime.now(timezone.utc)
+    command.delivered_at = command.delivered_at or now
+    command.acked_at = command.acked_at or now
+    db.commit()
+
+
+@router.post("/heartbeat")
+def heartbeat(body: HeartbeatIn, device: Device = Depends(get_current_device), db: Session = Depends(get_db)) -> dict:
+    _apply_heartbeat(db, device, body)
+    db.commit()
+    return {"status": "ok"}
