@@ -1,6 +1,6 @@
 """P2.7 — analytics correctness: DST timeline buckets, empty-data nulls, live-state derivation."""
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from fastapi.testclient import TestClient
 
@@ -8,12 +8,11 @@ from api.app.db import SessionLocal
 from api.app.main import create_app
 from api.app.models import Child, EmotionEvent, Parent
 from api.tests.test_device_sync_events import (
-    device_headers,
     paired,
     post_events,
     session_snapshot,
 )
-from api.tests.test_pairing import REQ, pair, set_pin
+from api.tests.test_pairing import REQ, set_pin
 
 
 def register_with_tz(client, email, tz):
@@ -47,7 +46,7 @@ def test_timeline_handles_dst_transition_day(parent_client):
                 db.add(
                     EmotionEvent(
                         child_id=uuid.UUID(child_id), client_uuid=f"dst-{hour}-{minute}",
-                        ts=datetime(2026, 3, 29, hour, minute, tzinfo=timezone.utc),
+                        ts=datetime(2026, 3, 29, hour, minute, tzinfo=UTC),
                         calm_index=72, label="calm", face_present=True, quality=0.9,
                     )
                 )
@@ -115,7 +114,7 @@ def test_live_state_transitions(parent_client):
 def test_overview_counters_from_seeded_day(parent_client):
     ctx = paired(parent_client)
     child_id = ctx["child"]["id"]
-    started = datetime.now(timezone.utc).replace(second=0, microsecond=0) - timedelta(minutes=30)
+    started = datetime.now(UTC).replace(second=0, microsecond=0) - timedelta(minutes=30)
     iso = started.isoformat()
     snap = {
         "id": str(uuid.uuid4()), "status": "ended", "granted_s": 3600, "bonus_s": 600,
