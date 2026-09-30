@@ -16,14 +16,16 @@ export class ApiError extends Error {
   status: number;
   code: string;
   requestId: string | null;
+  retryAfter: number | null;
   fields: { loc: string[]; msg: string }[];
 
   constructor(status: number, code: string, detail: string, requestId: string | null,
-              fields: { loc: string[]; msg: string }[] = []) {
+              fields: { loc: string[]; msg: string }[] = [], retryAfter: number | null = null) {
     super(copyFor(code, detail));
     this.status = status;
     this.code = code;
     this.requestId = requestId;
+    this.retryAfter = retryAfter;
     this.fields = fields;
   }
 }
@@ -44,12 +46,14 @@ async function parseError(response: Response): Promise<ApiError> {
     // non-JSON error body — fall through with defaults
   }
   const code = body.code ?? (response.status >= 500 ? "INTERNAL_ERROR" : "NOT_FOUND");
+  const retryAfterHeader = response.headers.get("Retry-After");
   return new ApiError(
     response.status,
     code,
     body.detail ?? "",
     body.request_id ?? response.headers.get("X-Request-ID"),
     body.errors ?? [],
+    retryAfterHeader === null ? null : Number(retryAfterHeader),
   );
 }
 
