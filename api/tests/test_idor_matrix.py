@@ -6,11 +6,8 @@ the matrix.
 """
 import uuid
 
-import pytest
-from fastapi.testclient import TestClient
-
 from api.app.main import create_app
-from api.tests.test_pairing import REQ, issue_code, make_child, pair, set_pin
+from api.tests.test_pairing import REQ, issue_code, pair, set_pin
 
 NOT_FOUND = 404
 
@@ -96,6 +93,7 @@ def _device_id_for(client, child_id) -> str:
 def test_idor_matrix(parent_client, other_client):
     a = provision(parent_client, "owner@example.com", "Aarav")
     b = provision(other_client, "intruder@example.com", "Ira")
+    assert b["child_id"] != a["child_id"]
     a["device_id"] = _device_id_for(parent_client, a["child_id"])
 
     covered = set()

@@ -1,0 +1,62 @@
+{
+  "phase": 2,
+  "timestamp": "2026-09-30T05:51:26+00:00",
+  "checks": [
+    {
+      "name": "tests",
+      "cmd": "cd api && .venv/bin/pytest -p no:cacheprovider -q --cov-fail-under=60",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "no-skips",
+      "cmd": "! grep -rnE 'pytest\\.mark\\.skip|pytest\\.skip|skipif' api/tests/",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "idor",
+      "cmd": "cd api && .venv/bin/pytest -p no:cacheprovider -q tests/test_idor_matrix.py --no-cov",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "security",
+      "cmd": "cd api && .venv/bin/pytest -p no:cacheprovider -q tests/test_security.py tests/test_auth.py tests/test_health.py --no-cov",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "openapi",
+      "cmd": "make contract-export && git diff --exit-code -- contracts/openapi.json && echo 'openapi snapshot unchanged'",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "virtual child",
+      "cmd": "api/.venv/bin/python scripts/check_virtual_child.py",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "lint",
+      "cmd": "cd api && .venv/bin/ruff check . && cd .. && api/.venv/bin/ruff check scripts/",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "placeholders",
+      "cmd": "bash scripts/no_placeholders.sh",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "regression: previous gate",
+      "cmd": "bash scripts/gate.sh 1",
+      "exit": 0,
+      "pass": true
+    }
+  ],
+  "verdict": "PASS",
+  "fallback_applied": false
+}

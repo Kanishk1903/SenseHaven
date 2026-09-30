@@ -56,7 +56,7 @@ def main() -> int:
         with httpx.Client(timeout=30.0) as client:
             wait_health(client)
 
-            email = f"gate-{uuid.uuid4().hex[:8]}@senseheaven.test"
+            email = f"gate-{uuid.uuid4().hex[:8]}@example.com"  # .test TLD is rejected by email-validator
             response = client.post(
                 f"{BASE}/api/v1/auth/register",
                 json={"email": email, "password": "gate-password-123", "display_name": "Gate",
@@ -72,14 +72,35 @@ def main() -> int:
             )
             code = client.post(f"{BASE}/api/v1/children/{child['id']}/pairing-code", headers=REQ).json()["code"]
 
-            # The virtual child pairs itself and runs the stress scenario (fast).
-            virtual = subprocess.run(
+            # The virtual child pairs itself, then obeys the remote start command.
+            virtual = subprocess.Popen(
                 [str(VENV_PY), str(ROOT / "scripts" / "virtual_child.py"),
                  "--base-url", BASE, "--code", code, "--scenario", "stress", "--fast", "--ticks", "40"],
-                capture_output=True, text=True, timeout=180, check=False,
+                stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
             )
+            try:
+                deadline = time.monotonic() + 60
+                devices = []
+                while time.monotonic() < deadline:
+                    devices = client.get(f"{BASE}/api/v1/children/{child['id']}/devices").json()
+                    if devices:
+                        break
+                    time.sleep(1)
+                assert devices, "virtual child did not pair within 60 s"
+
+                # Remote start once the device exists: it picks up start_session on its next sync.
+                started = client.post(
+                    f"{BASE}/api/v1/children/{child['id']}/sessions",
+                    json={"duration_min": 30}, headers=REQ,
+                )
+                started.raise_for_status()
+
+                out, _ = virtual.communicate(timeout=180)
+            except Exception:
+                virtual.kill()
+                raise
             if virtual.returncode != 0:
-                print("virtual_child failed:\n", virtual.stdout[-2000:], virtual.stderr[-2000:])
+                print("virtual_child failed:\n", (out or "")[-2000:])
                 return 1
 
             alerts = client.get(f"{BASE}/api/v1/alerts").json()
