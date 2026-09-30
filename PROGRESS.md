@@ -57,3 +57,5 @@ One line per event: `YYYY-MM-DD HH:MM · phase N · slice X · ✅|⚠|❌ · no
 2026-09-30 11:16 · phase 2 · P2.8 · ✅ · IDOR matrix (openapi-driven coverage), security consolidation, seed_demo (idempotent ×2), virtual_child + gate-2 integration check, openapi export (33 paths) — 73 tests, 88% cov, ruff clean
 2026-09-30 11:24 · phase 2 · gate · ✅ · GATE 2 GREEN (verdict PASS): 9/9 checks incl. virtual-child e2e + gate-1 regression; 77 tests, 88% cov; negatives NEG1-NEG5 fail safely
 2026-09-30 11:25 · phase 1 · gate · ⚠ · process repair: the phase-1 closing commit/tag were missed when moving to Phase 2 — tag phase-1-verified applied retroactively to e8a0929 (the commit that first committed verification/report-phase-1.md); this commit records the repair
+2026-09-30 11:40 · phase 3 · P3.1–P3.7 · ✅ · ml venv+lock(61), task fetched+hashed (64184e22…), all 13 pipeline modules + 12 data-independent tests green, model card, gates
+2026-09-30 11:40 · phase 3 · gate · ✅ · GATE 3 GREEN (verdict BLOCKED_ON_H3): 7 executable checks PASS incl. gate-2 regression; 6 data-dependent checks honestly blocked on H3 — no data faked

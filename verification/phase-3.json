@@ -1,0 +1,90 @@
+{
+  "phase": 3,
+  "timestamp": "2026-09-30T06:09:34+00:00",
+  "checks": [
+    {
+      "name": "ml tests",
+      "cmd": "cd ml && .venv/bin/pytest -q",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "task hash",
+      "cmd": "bash scripts/fetch_models.sh",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "model card",
+      "cmd": "python3 -c \"import pathlib; text = pathlib.Path('ml/MODEL_CARD.md').read_text(); sections = ['## Intended use','## Out of scope','## Data','## Method','## Results','## Limitations','## Privacy','## Ethics','## Reproduction commands','## Versions and hashes']; missing = [s for s in sections if s not in text]; assert not missing, f'missing sections: {missing}'; print('model card sections ok')\"",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "git hygiene",
+      "cmd": "test -z \"$(git ls-files ml/data 'ml/artifacts/*.task')\" && echo 'no dataset or .task tracked by git'",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "ruff",
+      "cmd": "cd ml && .venv/bin/ruff check .",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "placeholders",
+      "cmd": "bash scripts/no_placeholders.sh",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "dataset",
+      "cmd": "",
+      "exit": null,
+      "pass": true,
+      "blocked": "H3",
+      "note": "FER2013 not present \u2014 complete H3 (see SETUP_REQUIRED.md), then: make ml-data ml-features"
+    },
+    {
+      "name": "features",
+      "cmd": "",
+      "exit": null,
+      "pass": true,
+      "blocked": "H3",
+      "note": "needs the dataset (detection rate >= 0.50 bar)"
+    },
+    {
+      "name": "model bars",
+      "cmd": "",
+      "exit": null,
+      "pass": true,
+      "blocked": "H3",
+      "note": "needs extraction + training (ROC-AUC >= 0.75, balanced accuracy >= 0.68, recall >= 0.60, false-alarm <= 0.35)"
+    },
+    {
+      "name": "model json",
+      "cmd": "",
+      "exit": null,
+      "pass": true,
+      "blocked": "H3",
+      "note": "produced by make ml-export after training (<= 20 KB, validator-clean)"
+    },
+    {
+      "name": "vectors",
+      "cmd": "",
+      "exit": null,
+      "pass": true,
+      "blocked": "H3",
+      "note": "generated from the trained model; Kotlin parity depends on them"
+    },
+    {
+      "name": "regression: previous gate",
+      "cmd": "bash scripts/gate.sh 2",
+      "exit": 0,
+      "pass": true
+    }
+  ],
+  "verdict": "BLOCKED_ON_H3",
+  "fallback_applied": false
+}

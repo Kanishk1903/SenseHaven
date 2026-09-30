@@ -1,0 +1,24 @@
+{
+  "after_dedupe": {
+    "test_calm": 1,
+    "test_distress": 1,
+    "total": 8,
+    "train_calm": 2,
+    "train_distress": 4
+  },
+  "after_sampling": {
+    "test_calm": 1,
+    "test_distress": 1,
+    "total": 8,
+    "train_calm": 2,
+    "train_distress": 4
+  },
+  "before_dedupe": {
+    "test_calm": 2,
+    "test_distress": 1,
+    "total": 11,
+    "train_calm": 2,
+    "train_distress": 4
+  },
+  "excluded_before_dedupe": 2
+}

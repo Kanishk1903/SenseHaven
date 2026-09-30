@@ -1,0 +1,10 @@
+mediapipe
+scikit-learn
+numpy
+pandas
+opencv-python-headless
+matplotlib
+pytest
+kaggle
+tqdm
+ruff
