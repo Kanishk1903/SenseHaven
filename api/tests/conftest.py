@@ -32,7 +32,44 @@ def _clean_tables():
     limiter.reset()
 
 
+REQUESTED_WITH = {"X-Requested-With": "senseheaven"}
+
+
 @pytest.fixture
 def client():
     with TestClient(create_app()) as test_client:
+        yield test_client
+
+
+@pytest.fixture
+def parent_client(client):
+    response = client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "parent@example.com",
+            "password": "correct-horse-battery",
+            "display_name": "Priya",
+            "timezone": "Asia/Kolkata",
+        },
+        headers=REQUESTED_WITH,
+    )
+    assert response.status_code == 201
+    return client
+
+
+@pytest.fixture
+def other_client():
+    """A second, independently-authenticated browser (separate cookie jar)."""
+    with TestClient(create_app()) as test_client:
+        response = test_client.post(
+            "/api/v1/auth/register",
+            json={
+                "email": "other@example.com",
+                "password": "other-password-123",
+                "display_name": "Other",
+                "timezone": "Asia/Kolkata",
+            },
+            headers=REQUESTED_WITH,
+        )
+        assert response.status_code == 201
         yield test_client

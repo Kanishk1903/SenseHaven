@@ -47,12 +47,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     install_middleware(app, settings)
     install_error_handlers(app)
 
-    from .routers import auth, ops, parents
+    from .routers import auth, children, ops, parents
 
     app.include_router(ops.router)
     app.include_router(ops.router, prefix="/api/v1")
     app.include_router(auth.router, prefix="/api/v1")
     app.include_router(parents.router, prefix="/api/v1")
+    app.include_router(children.router, prefix="/api/v1")
 
     return app
 
