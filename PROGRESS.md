@@ -48,3 +48,4 @@ One line per event: `YYYY-MM-DD HH:MM · phase N · slice X · ✅|⚠|❌ · no
 8. P2.8 — IDOR matrix over every parent path route, security header/docs-off tests, seed_demo.py, virtual_child.py, contract-export.
 9. `make gate-2` green → verifier report → tag `phase-2-verified`.
 2026-09-30 10:42 · phase 2 · P2.1 · ✅ · venv+lock(42 pins), config dev-defaults/fail-fast (D-16), engine, middleware, problem+json, limiter, healthz/readyz — 8 tests green
+2026-09-30 10:45 · phase 2 · P2.2 · ✅ · 10 lean tables + constraint/cascade tests (dup client_uuid, single active device, dedupe_key, cascade delete) — 14 tests green
