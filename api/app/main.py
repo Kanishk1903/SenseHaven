@@ -61,6 +61,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(alerts.router, prefix="/api/v1")
     app.include_router(devices.router, prefix="/api/v1")
 
+    from .static_serving import mount_static
+
+    mount_static(app, settings)
+
     return app
 
 

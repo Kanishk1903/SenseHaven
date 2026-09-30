@@ -1,0 +1,24 @@
+@import "./tokens.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: "Inter Variable", system-ui, sans-serif;
+  }
+  body {
+    @apply bg-bg text-text antialiased;
+  }
+  /* focus ring from tokens: 2px primary ring, 2px offset */
+  :focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: var(--focus-ring-offset);
+    border-radius: 4px;
+  }
+  /* tabular numerals wherever numbers line up (File 02 §2.3) */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+}
