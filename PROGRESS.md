@@ -22,3 +22,13 @@ One line per event: `YYYY-MM-DD HH:MM · phase N · slice X · ✅|⚠|❌ · no
 2026-09-28 12:06 · phase 0 · gate · ✅ · re-verified: make gate-0 green (BLOCKED_ON_H1 for ci only)
 2026-09-28 12:11 · phase 0 · verify · ✅ · verifier negative checks: .env.example deleted -> FAIL(layout, exit 1); marker-token file -> no_placeholders exit 1 — both fail safely (verification/report-phase-0.md)
 2026-09-28 12:11 · phase 0 · gate · ✅ · GATE 0 GREEN: verdict BLOCKED_ON_H1 (ci human-blocked only), all other checks PASS
+
+## Phase 1 plan (≤ 10 lines)
+
+1. Slice P1.1 — `contracts/error_codes.md`: the 17 spec codes with HTTP status + user-facing copy (File 02 §5 voice).
+2. Slice P1.2 — `contracts/settings_schema.json` (JSON Schema draft 2020-12) with defaults, ranges, `x-cross-field` rule.
+3. Slice P1.3 — `design/tokens.json` (light only); `gen_tokens.py` → tokens.css + tailwind.tokens.cjs + Tokens.kt; `check_contrast.py` (the 8 spec pairs); `check_contracts.py`; `contracts/README.md`.
+4. `make gate-1` (ends with regression gate-0).
+5. Verifier report `verification/report-phase-1.md` with negative checks (tampered error table, tampered generated file).
+6. Commit + tag `phase-1-verified`.
+2026-09-30 10:33 · phase 1 · P1.1 · ✅ · contracts/error_codes.md: 17 codes, HTTP + copy per File 02 §5
