@@ -42,6 +42,10 @@ flowchart TD
 
 ## Data model
 
+Generated ER diagram: `docs/er.mermaid` (via `scripts/gen_er.py` from the SQLAlchemy
+metadata — deterministic). Paste into any Mermaid renderer.
+
+
 Ten lean tables (LEAN §1.2): `parents`, `children` (settings JSONB),
 `pairing_codes`, `devices` (partial-unique active per child), `screen_sessions`
 (pending/active/cooldown/expired/ended), `emotion_events`, `ledger_events`

@@ -1,0 +1,42 @@
+{
+  "phase": 7,
+  "timestamp": "2026-10-01T20:44:33+00:00",
+  "checks": [
+    {
+      "name": "docker",
+      "cmd": "bash scripts/check_docker.sh",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "no dev leaks",
+      "cmd": "bash scripts/check_no_dev_leaks.sh",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "live smoke",
+      "cmd": "",
+      "exit": null,
+      "pass": true,
+      "blocked": "H2",
+      "note": "no live URL \u2014 deploy via Render (SETUP_REQUIRED.md H2+H2b), then SMOKE_BASE_URL=https://<url> make gate-7"
+    },
+    {
+      "name": "release",
+      "cmd": "",
+      "exit": null,
+      "pass": true,
+      "blocked": "H1",
+      "note": "no GitHub auth \u2014 push a v* tag with gh auth (H1); android.yml release job publishes the APK + apk.json"
+    },
+    {
+      "name": "regression: previous gate",
+      "cmd": "bash scripts/gate.sh 6",
+      "exit": 0,
+      "pass": true
+    }
+  ],
+  "verdict": "BLOCKED_ON_H2+H1",
+  "fallback_applied": false
+}

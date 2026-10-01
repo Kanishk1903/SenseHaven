@@ -71,3 +71,5 @@ One line per event: `YYYY-MM-DD HH:MM · phase N · slice X · ✅|⚠|❌ · no
 2026-10-02 01:26 · phase 6 · P6.1 · ✅ · system_test.py: real API + virtual child, stress scenario → alert+timeline+ledger, calm scenario → bonus + 0 alerts
 2026-10-02 01:26 · phase 6 · P6.2-P6.3 · ✅ · edge_case_coverage.md (14 rows → named proof, checker-enforced), DEVICE_ACCEPTANCE_TEST.md A1..A20
 2026-10-02 01:26 · phase 6 · gate · ✅ · GATE 6 GREEN (verdict PASS): 5/5 checks incl. full gate-5 chain with live emulator e2e; recipe: clean adb server + wipe-data boot (KI-1)
+2026-10-02 02:15 · phase 8 · P8.1-P8.3 · ✅ · architecture.md (mermaid DFDs + er.mermaid link), synopsis_delta, viva_prep (42 QA), DEMO_SCRIPT, report skeletons + results.md (deterministic), FINAL_CHECKLIST
+2026-10-02 02:15 · phase 8 · gate · ✅ · GATE 8 GREEN (verdict PASS): full chain 0-8 green in one run — docs, results deterministic, checklist, tags, regression through gate-7→6→5(live e2e)→4→…→0

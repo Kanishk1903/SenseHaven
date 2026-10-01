@@ -1,0 +1,4 @@
+  File "<string>", line 1
+    \nimport pathlib\ntext = pathlib.Path('docs/FINAL_CHECKLIST.md').read_text()\nassert 'FINAL CHECKLIST' in text and 'SETUP_REQUIRED' in text\nprint('final checklist present')
+     ^
+SyntaxError: unexpected character after line continuation character

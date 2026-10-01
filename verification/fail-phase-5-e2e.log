@@ -1,0 +1,40 @@
+> Task :app:compressDebugAssets UP-TO-DATE
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :app:dexBuilderDebug UP-TO-DATE
+> Task :app:mergeDebugGlobalSynthetics UP-TO-DATE
+> Task :app:processDebugJavaRes UP-TO-DATE
+> Task :app:mergeDebugJavaResource UP-TO-DATE
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :app:mergeExtDexDebug UP-TO-DATE
+> Task :app:mergeLibDexDebug UP-TO-DATE
+> Task :app:mergeProjectDexDebug UP-TO-DATE
+> Task :app:mergeDebugJniLibFolders UP-TO-DATE
+> Task :app:mergeDebugNativeLibs UP-TO-DATE
+> Task :app:stripDebugDebugSymbols UP-TO-DATE
+> Task :app:validateSigningDebug UP-TO-DATE
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :app:packageDebug UP-TO-DATE
+> Task :app:createDebugApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleDebug UP-TO-DATE
+
+BUILD SUCCESSFUL in 4s
+39 actionable tasks: 39 up-to-date
+Performing Streamed Install
+Success
+ Container aakhribaar_glm-db-1 Running 
+db ready after 1s
+warm after 2s: http://localhost:8000/healthz -> 200
+child create: 201 {"id":"53e71e41-f979-40f3-b058-b83401931f95","name":"Emu Kid","birth_year":null,"avatar_key":"orb-1","settings":{"good_bonus_min":10,"stress_penalty_min":5,"cooldown_min":5,"max_bonus_per_session_min"
+Traceback (most recent call last):
+  File "/Users/kanishkgupta/Desktop/aakhribaar_glm/scripts/e2e_android.py", line 132, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/Users/kanishkgupta/Desktop/aakhribaar_glm/scripts/e2e_android.py", line 62, in main
+    adb(serial, "shell", "am", "broadcast", "-a", "app.senseheaven.debug.PAIR", "-p", "app.senseheaven.child", "--es", "code", code)
+  File "/Users/kanishkgupta/Desktop/aakhribaar_glm/scripts/e2e_android.py", line 29, in adb
+    result = subprocess.run(
+             ^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['adb', '-s', 'emulator-5554', 'shell', 'am', 'broadcast', '-a', 'app.senseheaven.debug.PAIR', '-p', 'app.senseheaven.child', '--es', 'code', '419978']' returned non-zero exit status 1.

@@ -1,40 +1,40 @@
-25 |     text = (ROOT / "docs" / "DEVICE_ACCEPTANCE_TEST.md").read_text()
-26 |     steps = re.findall(r"^\| (A\d+) \|", text, re.M)
-   |                                                ^^^^
-27 |     assert len(steps) >= 20, f"only {len(steps)} acceptance steps"
-28 |     print(f"acceptance doc: A1..{steps[-1][1:]} present ({len(steps)} steps)")
-   |
-help: Replace with `re.MULTILINE`
-   |
-25 |     text = (ROOT / "docs" / "DEVICE_ACCEPTANCE_TEST.md").read_text()
-   -     steps = re.findall(r"^\| (A\d+) \|", text, re.M)
-26 +     steps = re.findall(r"^\| (A\d+) \|", text, re.MULTILINE)
-27 |     assert len(steps) >= 20, f"only {len(steps)} acceptance steps"
    |
 
-PLW1510 `subprocess.run` without explicit `check` argument
-  --> scripts/system_test.py:96:12
+F841 Local variable `name` is assigned to but never used
+  --> scripts/gen_er.py:29:13
    |
-94 |         PYTHONPATH=str(API),
-95 |     )
-96 |     lsof = subprocess.run(["lsof", "-ti", f":{PORT}"], capture_output=True, text=True)
-   |            ^^^^^^^^^^^^^^
-97 |     for pid in lsof.stdout.split():
-98 |         subprocess.run(["kill", "-9", pid], capture_output=True)
+27 |         for column in table.columns:
+28 |             type_name = column.type.__class__.__name__
+29 |             name = column.name
+   |             ^^^^
+30 |         # erDiagram attribute syntax: type NAME [PK/FK]
+31 |         lines.append(f"    {entity} {{")
    |
-help: Add explicit `check=False`
+help: Remove assignment to unused variable `name`
 
-PLW1510 `subprocess.run` without explicit `check` argument
-   --> scripts/system_test.py:98:9
-    |
- 96 |     lsof = subprocess.run(["lsof", "-ti", f":{PORT}"], capture_output=True, text=True)
- 97 |     for pid in lsof.stdout.split():
- 98 |         subprocess.run(["kill", "-9", pid], capture_output=True)
-    |         ^^^^^^^^^^^^^^
- 99 |     server = subprocess.Popen(
-100 |         [str(API / ".venv" / "bin" / "python"), "-m", "uvicorn", "app.main:app",
-    |
-help: Add explicit `check=False`
+F841 Local variable `nullable` is assigned to but never used
+  --> scripts/gen_er.py:35:13
+   |
+33 |             type_name = column.type.__class__.__name__.upper()
+34 |             flag = " PK" if column.primary_key else (" FK" if column.foreign_keys else "")
+35 |             nullable = " \"nullable\"" if column.nullable else ""
+   |             ^^^^^^^^
+36 |             lines.append(f"        {type_name} {column.name}{flag}")
+37 |         lines.append("    }")
+   |
+help: Remove assignment to unused variable `nullable`
 
-Found 4 errors.
-[*] 2 fixable with the `--fix` option.
+SIM222 Use `True` instead of `... or True`
+  --> scripts/smoke_prod.py:88:12
+   |
+86 |     sync = client.get(f"{base}/api/v1/device/sync", headers=dev).json()
+87 |     session = sync["session"]
+88 |     assert session is not None or True  # session created below if the smoke account is fresh
+   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+89 |     if session is None:
+90 |         started = client.post(f"{base}/api/v1/children/{child['id']}/sessions",
+   |
+help: Replace with `True`
+
+Found 6 errors.
+[*] 2 fixable with the `--fix` option (3 hidden fixes can be enabled with the `--unsafe-fixes` option).

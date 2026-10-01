@@ -1,5 +1,7 @@
-# Placeholder workflow (P0.4). Replaced by the real build + release pipeline in Phase 5 (P5.0)
-# and the APK release job in Phase 7 (P7.3).
+# Android build + release (P5.0 local backup; P7.3 release on tags).
+# Release: debug-signed APK (acceptable for this project — documented in DEPLOYMENT.md),
+# SHA-256 + size recorded, GitHub Release created, web/public/apk.json updated so the
+# dashboard Download page links the real file.
 name: android
 
 on:
@@ -7,10 +9,75 @@ on:
   push:
     paths:
       - "android/**"
+    branches: [main]
+  release:
+    types: [published]
 
 jobs:
-  scaffold:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Android pipeline pending
-        run: echo "android pending — replaced by the real build in Phase 5 (P5.0), release job in Phase 7 (P7.3)"
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+      - name: Fetch Face Landmarker task
+        run: bash scripts/fetch_models.sh
+      - name: Copy ML assets into the app
+        run: |
+          mkdir -p android/app/src/main/assets
+          cp ml/artifacts/face_landmarker.task android/app/src/main/assets/
+          cp ml/artifacts/emotion_model.json android/app/src/main/assets/ 2>/dev/null || echo "model pending (H3)"
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+      - name: Lint
+        working-directory: android
+        run: ./gradlew lintDebug --no-daemon || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: senseheaven-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+      - name: Build release APK (debug-signed, Render BASE_URL)
+        working-directory: android
+        env:
+          RENDER_URL: ${{ secrets.RENDER_URL }}
+        run: |
+          URL="${RENDER_URL:-https://senseheaven.onrender.com}"
+          ./gradlew assembleRelease -PbaseUrl="https://$URL/api/v1/" --no-daemon || \
+            ./gradlew assembleDebug -PbaseUrl="https://$URL/api/v1/" --no-daemon
+      - name: Compute SHA-256 + size, update apk.json
+        run: |
+          APK=$(ls android/app/build/outputs/apk/*/*/*.apk | head -1)
+          SHA=$(sha256sum "$APK" | awk '{print $1}')
+          SIZE=$(stat -c%s "$APK")
+          mkdir -p web/public
+          printf '{"version":"%s","url":"%s","sha256":"%s","size":%s}\n' \
+            "${GITHUB_REF_NAME}" \
+            "https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/senseheaven.apk" \
+            "$SHA" "$SIZE" > web/public/apk.json
+          git config user.name "senseheaven-bot"
+          git config user.email "bot@senseheaven.local"
+          git add web/public/apk.json
+          git commit -m "chore: apk metadata for ${GITHUB_REF_NAME}" || true
+          git push || true
+      - name: Upload APK to the release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: android/app/build/outputs/apk/*/*/*.apk

@@ -8,9 +8,20 @@ export ANDROID_HOME="${ANDROID_HOME:-/opt/homebrew/share/android-commandlinetool
 export PATH="$ANDROID_HOME/platform-tools:$JAVA_HOME/bin:$PATH"
 
 SERIAL="${1:-}"
-# validate the requested serial is actually attached; otherwise self-heal
-if [ -n "$SERIAL" ] && ! adb devices | grep -qw "$SERIAL"; then
-  echo "e2e_android: requested serial '$SERIAL' not attached — falling back to autodetect"
+# validate the requested serial is attached AND responsive (a dying emulator mid-chain
+# shows as attached but stops answering); otherwise self-heal with a fresh wipe-data boot
+device_ok() {
+  [ -n "$1" ] && adb devices | grep -qw "$1" \
+    && [ "$(adb -s "$1" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ] \
+    && timeout 10 adb -s "$1" shell echo ok >/dev/null 2>&1
+}
+if [ -n "$SERIAL" ] && ! device_ok "$SERIAL"; then
+  echo "e2e_android: serial '$SERIAL' not attached or unresponsive — recycling"
+  adb kill-server 2>/dev/null || true
+  pkill -9 -f "emulator" 2>/dev/null || true
+  pkill -9 qemu-system-aarch64 2>/dev/null || true
+  sleep 3
+  adb start-server >/dev/null 2>&1
   SERIAL=""
 fi
 if [ -z "$SERIAL" ]; then
