@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dusk gradient background (File 02 §2.6) -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <gradient android:startColor="#1B2350" android:endColor="#3D4FA8" android:angle="270" />
+</shape>
