@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">SenseHeaven</string>
     <string name="consent_title">What SenseHeaven can see</string>
+    <string name="notification_channel">Screen time</string>
+    <string name="notification_title">SenseHeaven</string>
+    <string name="notification_text">Keeping screen time healthy</string>
 </resources>

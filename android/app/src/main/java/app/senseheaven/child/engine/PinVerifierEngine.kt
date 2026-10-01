@@ -1,11 +1,13 @@
 package app.senseheaven.child.engine
 
+import kotlinx.serialization.Serializable
 import java.security.MessageDigest
 import java.util.Base64
 import javax.crypto.spec.PBEKeySpec
 import javax.crypto.SecretKeyFactory
 
 /** Verifier bundle delivered at pairing (File 03 binding: PIN verifier). */
+@Serializable
 data class PinVerifier(
     val iterations: Int,
     val saltB64: String,

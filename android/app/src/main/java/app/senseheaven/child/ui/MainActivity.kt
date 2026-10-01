@@ -1,8 +1,15 @@
 package app.senseheaven.child.ui
 
+import android.Manifest
+import android.app.AppOpsManager
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -22,73 +30,112 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import app.senseheaven.child.SenseHeavenApp
 import app.senseheaven.child.design.Tokens
+import app.senseheaven.child.services.GuardService
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 /**
- * Entry point (File 02 §4): Welcome & consent — three short cards, reachable later from
- * Home → "How SenseHeaven works". Primary button advances to pairing (layer 5a).
+ * Single-activity flow (File 02 §4): Welcome/consent → Pair → Setup wizard → Home.
+ * The lock overlay lives in LockActivity (shown by GuardService whenever locked).
  */
 class MainActivity : ComponentActivity() {
+
+    private var cameraGranted by mutableStateOf(false)
+    private var notificationsGranted by mutableStateOf(false)
+    private var usageGranted by mutableStateOf(false)
+    private var overlayGranted by mutableStateOf(false)
+
+    private val cameraLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { cameraGranted = it }
+
+    private val notificationsLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { notificationsGranted = it }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             DuskTheme {
-                SenseHeavenApp()
+                SenseHeavenFlow(
+                    cameraGranted = cameraGranted,
+                    notificationsGranted = notificationsGranted,
+                    usageGranted = usageGranted,
+                    overlayGranted = overlayGranted,
+                    onRequestCamera = { cameraLauncher.launch(Manifest.permission.CAMERA) },
+                    onRequestNotifications = {
+                        if (android.os.Build.VERSION.SDK_INT >= 33) {
+                            notificationsLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        }
+                    },
+                )
             }
         }
     }
-}
 
-/** Dusk gradient feel implemented with Material surfaces + tokens (LEAN §1.1 themes). */
-@Composable
-fun DuskTheme(content: @Composable () -> Unit) {
-    MaterialTheme(
-        colorScheme = MaterialTheme.colorScheme.copy(
-            background = Color(0xFF1B2350),
-            onBackground = Color(0xFFF2F3FF),
-            primary = Tokens.Calm,
-            onPrimary = Color(0xFFF2F3FF),
-        ),
-        content = content,
-    )
-}
+    override fun onResume() {
+        super.onResume()
+        refreshPermissions()
+    }
 
-@Composable
-fun SenseHeavenApp() {
-    var consented by rememberSaveable { mutableStateOf(false) }
-    if (consented) {
-        PairScreen()
-    } else {
-        ConsentScreen(onUnderstood = { consented = true })
+    private fun refreshPermissions() {
+        cameraGranted = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) ==
+            android.content.pm.PackageManager.PERMISSION_GRANTED
+        notificationsGranted = if (android.os.Build.VERSION.SDK_INT >= 33) {
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
+                android.content.pm.PackageManager.PERMISSION_GRANTED
+        } else {
+            true
+        }
+        val appOps = getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
+        val mode = appOps.checkOpNoThrow(
+            AppOpsManager.OPSTR_GET_USAGE_STATS,
+            android.os.Process.myUid(),
+            packageName,
+        )
+        usageGranted = mode == AppOpsManager.MODE_ALLOWED
+        overlayGranted = Settings.canDrawOverlays(this)
     }
 }
 
-private val consentCards = listOf(
-    "What SenseHeaven does" to
-        "It keeps your screen time healthy: you earn extra time by staying calm, and take " +
-        "short breathing breaks when things get tense.",
-    "What it can see" to
-        "Your face expression is estimated on this phone — no photos are ever saved or sent. " +
-        "It also sees which apps you use (and searches, only if your parent turns that on).",
-    "Who sees it" to
-        "Your parent. Your wellbeing score and app totals show in their dashboard — never " +
-        "your camera or photos.",
-)
+private enum class Step { CONSENT, PAIR, SETUP, HOME }
 
 @Composable
-fun ConsentScreen(onUnderstood: () -> Unit) {
+fun SenseHeavenFlow(
+    cameraGranted: Boolean,
+    notificationsGranted: Boolean,
+    usageGranted: Boolean,
+    overlayGranted: Boolean,
+    onRequestCamera: () -> Unit,
+    onRequestNotifications: () -> Unit,
+) {
+    val app = LocalContext.current.applicationContext as SenseHeavenApp
+    val ui by app.session.ui.collectAsState()
+    val context = LocalContext.current
+    var step by remember { mutableStateOf<Step?>(null) }
+    var pairing by remember { mutableStateOf(false) }
+    var pairError by remember { mutableStateOf<String?>(null) }
+    var code by remember { mutableStateOf("") }
+
+    val effectiveStep = when {
+        step != null -> step!!
+        ui.paired -> Step.SETUP
+        else -> Step.CONSENT
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -96,139 +143,240 @@ fun ConsentScreen(onUnderstood: () -> Unit) {
             .verticalScroll(rememberScrollState())
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
     ) {
-        Text(
-            text = "SenseHeaven",
-            fontSize = 28.sp,
-            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-        )
-        Spacer(Modifier.height(6.dp))
-        Text(
-            text = "Before we start, here is the honest deal.",
-            fontSize = 15.sp,
-            color = Color(0xFFB9C2F0),
-        )
-        Spacer(Modifier.height(20.dp))
-        consentCards.forEach { (title, body) ->
+        when (effectiveStep) {
+            Step.CONSENT -> ConsentScreenBody(onUnderstood = { step = Step.PAIR })
+
+            Step.PAIR -> {
+                Text("Enter the 6-digit code", fontSize = 24.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFFF2F3FF))
+                Text("Ask your parent for the code on their dashboard.", fontSize = 14.sp, color = Color(0xFFB9C2F0))
+                Spacer(Modifier.height(20.dp))
+                CodeDots(code)
+                Spacer(Modifier.height(16.dp))
+                Keypad(onDigit = { digit ->
+                    if (code.length < 6) code += digit
+                    if (code.length == 6 && !pairing) {
+                        pairing = true
+                        pairError = null
+                        CoroutineScope(Dispatchers.Main).launch {
+                            val (ok, error) = app.session.pair(code)
+                            pairing = false
+                            if (ok) {
+                                step = Step.SETUP
+                            } else {
+                                pairError = error ?: "That code isn't right."
+                                code = ""
+                            }
+                        }
+                    }
+                }, onBackspace = { if (code.isNotEmpty()) code = code.dropLast(1) })
+                if (pairing) {
+                    Spacer(Modifier.height(12.dp))
+                    Text("Waking things up…", fontSize = 14.sp, color = Color(0xFFB9C2F0))
+                }
+                pairError?.let {
+                    Spacer(Modifier.height(8.dp))
+                    Text(it, fontSize = 13.sp, color = Color(0xFFF5A28A))
+                }
+            }
+
+            Step.SETUP -> SetupWizard(
+                cameraGranted = cameraGranted,
+                notificationsGranted = notificationsGranted,
+                usageGranted = usageGranted,
+                overlayGranted = overlayGranted,
+                onRequestCamera = onRequestCamera,
+                onRequestNotifications = onRequestNotifications,
+                onRequestUsageAccess = {
+                    context.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
+                },
+                onRequestOverlay = {
+                    context.startActivity(
+                        Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, android.net.Uri.parse("package:" + context.packageName)),
+                    )
+                },
+                onAllGranted = {
+                    // tap-to-start (D-11): camera FGS begins from this visible screen
+                    GuardService.start(context)
+                    step = Step.HOME
+                },
+            )
+
+            Step.HOME -> HomeScreen(
+                onStartCounting = { GuardService.start(context) },
+                onOpenLock = { context.startActivity(Intent(context, LockActivity::class.java)) },
+            )
+        }
+    }
+}
+
+@Composable
+fun CodeDots(code: String) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        repeat(6) { index ->
+            val char = code.getOrNull(index)
+            Card(
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = if (char != null) Color(0xFF3D4FA8) else Color(0xFF2A3568)),
+            ) {
+                Text(
+                    text = if (char != null) "•" else " ",
+                    fontSize = 20.sp,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                    color = Color(0xFFF2F3FF),
+                )
+            }
+        }
+    }
+}
+
+private data class SetupItem(
+    val title: String,
+    val why: String,
+    val granted: Boolean,
+    val onAsk: () -> Unit,
+)
+
+@Composable
+fun SetupWizard(
+    cameraGranted: Boolean,
+    notificationsGranted: Boolean,
+    usageGranted: Boolean,
+    overlayGranted: Boolean,
+    onRequestCamera: () -> Unit,
+    onRequestNotifications: () -> Unit,
+    onRequestUsageAccess: () -> Unit,
+    onRequestOverlay: () -> Unit,
+    onAllGranted: () -> Unit,
+) {
+    val items = listOf(
+        SetupItem("Camera", "Needed to estimate your wellbeing score on this phone. No photos are saved or sent.", cameraGranted, onRequestCamera),
+        SetupItem("Notifications", "So SenseHeaven can show your countdown and gentle reminders.", notificationsGranted, onRequestNotifications),
+        SetupItem("Usage access", "Lets SenseHeaven pause time in always-allowed apps and block apps your parent chose.", usageGranted, onRequestUsageAccess),
+        SetupItem("Display over other apps", "Needed to show the lock screen when your time is up.", overlayGranted, onRequestOverlay),
+    )
+    val allGranted = items.all { it.granted }
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text("Almost there — allow these", fontSize = 24.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFFF2F3FF))
+        Spacer(Modifier.height(16.dp))
+        items.forEach { item ->
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFF2A3568)),
             ) {
-                Column(Modifier.padding(18.dp)) {
-                    Text(text = title, fontSize = 17.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
-                    Spacer(Modifier.height(6.dp))
-                    Text(text = body, fontSize = 14.sp, lineHeight = 20.sp, color = Color(0xFFD7DCF8))
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(item.title, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFFF2F3FF))
+                        Text(item.why, fontSize = 12.sp, color = Color(0xFFB9C2F0))
+                    }
+                    Spacer(Modifier.size(8.dp))
+                    if (item.granted) {
+                        Text("Granted", fontSize = 13.sp, color = Tokens.Calm)
+                    } else {
+                        Button(
+                            onClick = item.onAsk,
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3D4FA8)),
+                        ) {
+                            Text("Allow", color = Color(0xFFF2F3FF))
+                        }
+                    }
                 }
             }
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(10.dp))
         }
         Spacer(Modifier.height(8.dp))
         Button(
-            onClick = onUnderstood,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
+            onClick = onAllGranted,
+            enabled = allGranted,
+            modifier = Modifier.fillMaxWidth().height(56.dp),
             shape = RoundedCornerShape(24.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Tokens.Calm),
         ) {
-            Text("I understand", fontSize = 17.sp, color = Color(0xFF10231C))
+            Text(
+                if (allGranted) "Open SenseHeaven" else "Allow the ${items.count { !it.granted }} remaining item(s)",
+                fontSize = 17.sp,
+                color = Color(0xFF10231C),
+            )
         }
-        Spacer(Modifier.height(12.dp))
-        Text(
-            text = "Face estimates are approximate and are not a medical or psychological assessment.",
-            fontSize = 11.sp,
-            textAlign = TextAlign.Center,
-            color = Color(0xFF8F9ACD),
-        )
+        if (!allGranted) {
+            Spacer(Modifier.height(6.dp))
+            Text("Every card above needs to be green — tap Allow on each.", fontSize = 12.sp, color = Color(0xFF8F9ACD))
+        }
     }
 }
 
-/** Pair screen (layer 5a wires the API; the keypad UX is built now). */
 @Composable
-fun PairScreen() {
-    var code by rememberSaveable { mutableStateOf("") }
+fun HomeScreen(onStartCounting: () -> Unit, onOpenLock: () -> Unit) {
+    val app = LocalContext.current.applicationContext as SenseHeavenApp
+    val ui by app.session.ui.collectAsState()
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .safeDrawingPadding()
-            .padding(24.dp),
+        modifier = Modifier.fillMaxSize().padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Text("Enter the 6-digit code", fontSize = 22.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
-        Text("Ask your parent for the code on their dashboard.", fontSize = 14.sp, color = Color(0xFFB9C2F0))
-        Spacer(Modifier.height(24.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            repeat(6) { index ->
-                val char = code.getOrNull(index)
-                Card(
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (char != null) Color(0xFF3D4FA8) else Color(0xFF2A3568),
-                    ),
-                ) {
-                    Text(
-                        text = if (char != null) "•" else " ",
-                        fontSize = 20.sp,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-                        color = Color(0xFFF2F3FF),
-                    )
-                }
-            }
+        val active = ui.status == "active" || ui.status == "cooldown"
+        val statusText = when (ui.status) {
+            "active" -> "Screen time active"
+            "cooldown" -> "Breathing break"
+            "pending" -> "Your parent set up time — tap to begin"
+            "ended", "expired" -> "Screen time is paused"
+            else -> "Waiting for your parent…"
         }
-        Spacer(Modifier.height(24.dp))
-        Keypad(onDigit = { digit -> if (code.length < 6) code += digit }, onBackspace = {
-            if (code.isNotEmpty()) code = code.dropLast(1)
-        })
+        Text(statusText, fontSize = 24.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFFF2F3FF))
         Spacer(Modifier.height(12.dp))
         Text(
-            text = "Your parent's phone shows the code for 10 minutes.",
-            fontSize = 12.sp,
-            color = Color(0xFF8F9ACD),
+            text = formatRemaining(maxOf(0, ui.remainingS)),
+            fontSize = 56.sp,
+            fontWeight = FontWeight.ExtraBold,
+            color = Color(0xFFF2F3FF),
         )
-    }
-}
-
-@Composable
-fun Keypad(onDigit: (Char) -> Unit, onBackspace: () -> Unit) {
-    val rows = listOf(listOf('1', '2', '3'), listOf('4', '5', '6'), listOf('7', '8', '9'))
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        rows.forEach { row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                row.forEach { digit ->
-                    KeyCap(label = digit.toString(), onClick = { onDigit(digit) })
-                }
+        ui.calmIndex?.let { index ->
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = "Today's wellbeing: $index",
+                fontSize = 14.sp,
+                color = if (ui.showMoodToChild) Color(0xFF7FDDBB) else Color(0xFF8F9ACD),
+            )
+        }
+        Spacer(Modifier.height(24.dp))
+        if (!active && ui.status != "ended" && ui.status != "expired") {
+            Button(
+                onClick = onStartCounting,
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                shape = RoundedCornerShape(24.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Tokens.Calm),
+            ) {
+                Text("Tap to begin", fontSize = 18.sp, color = Color(0xFF10231C))
             }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            KeyCap(label = "⌫", onClick = onBackspace, contentDescription = "Backspace")
-            KeyCap(label = "0", onClick = { onDigit('0') })
+        Spacer(Modifier.height(10.dp))
+        Button(
+            onClick = onOpenLock,
+            modifier = Modifier.fillMaxWidth().height(52.dp),
+            shape = RoundedCornerShape(24.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2A3568)),
+        ) {
+            Text("Parent menu (PIN)", color = Color(0xFFF2F3FF))
+        }
+        if (ui.bonusS > 0) {
+            Spacer(Modifier.height(10.dp))
+            Text("+${ui.bonusS / 60} min earned for staying calm", fontSize = 14.sp, color = Tokens.Calm)
+        }
+        if (ui.penaltyS > 0) {
+            Spacer(Modifier.height(4.dp))
+            Text("${ui.penaltyS / 60} min paused for a breather", fontSize = 14.sp, color = Color(0xFFF5A28A))
         }
     }
 }
 
-@Composable
-fun KeyCap(label: String, onClick: () -> Unit, contentDescription: String? = null) {
-    Button(
-        onClick = onClick,
-        modifier = Modifier
-            .height(64.dp)
-            .fillMaxWidth(0.3f),
-        shape = RoundedCornerShape(24.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2A3568)),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
-    ) {
-        Text(
-            text = label,
-            fontSize = 22.sp,
-            color = Color(0xFFF2F3FF),
-            modifier = if (contentDescription != null) {
-                Modifier.semantics { this.contentDescription = contentDescription }
-            } else {
-                Modifier
-            },
-        )
-    }
+private fun formatRemaining(totalSeconds: Int): String {
+    val minutes = totalSeconds / 60
+    val hours = minutes / 60
+    val rest = minutes % 60
+    return if (hours > 0) "$hours:${rest.toString().padStart(2, '0')} m" else "${rest} m"
 }
