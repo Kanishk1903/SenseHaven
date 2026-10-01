@@ -1,0 +1,9 @@
+PASS unit
+PASS lint
+PASS build
+PASS static checks
+FAIL e2e (exit 1) — last lines:
+PASS screenshots
+PASS privacy static
+PASS regression: previous gate
+gate-5: verdict FAIL — written to verification/phase-5.json

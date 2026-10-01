@@ -23,6 +23,10 @@ if [ ! -f "$GATE" ]; then
 fi
 
 mkdir -p verification
+# environment self-heal: the compose db needs the docker daemon (colima) up
+if ! docker info >/dev/null 2>&1; then
+  command -v colima >/dev/null 2>&1 && colima start >/dev/null 2>&1 || true
+fi
 RESULTS="$(mktemp)"
 trap 'rm -f "$RESULTS"' EXIT
 

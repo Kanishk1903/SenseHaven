@@ -1,0 +1,38 @@
+{
+  "phase": 6,
+  "timestamp": "2026-10-01T19:55:52+00:00",
+  "checks": [
+    {
+      "name": "system test",
+      "cmd": "api/.venv/bin/python scripts/system_test.py",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "edge coverage",
+      "cmd": "python3 scripts/check_gate6_docs.py edge",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "acceptance doc",
+      "cmd": "python3 scripts/check_gate6_docs.py acceptance",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "known issues",
+      "cmd": "python3 scripts/check_gate6_docs.py known",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "regression: previous gate",
+      "cmd": "bash scripts/gate.sh 5",
+      "exit": 0,
+      "pass": true
+    }
+  ],
+  "verdict": "PASS",
+  "fallback_applied": false
+}

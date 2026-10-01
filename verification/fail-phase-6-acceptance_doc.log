@@ -1,0 +1,4 @@
+  File "<string>", line 1
+    \nimport pathlib, re\ntext = pathlib.Path('docs/DEVICE_ACCEPTANCE_TEST.md').read_text()\nsteps = re.findall(r'^\| (A\d+) \|', text, re.M)\nassert len(steps) >= 20, f'only {len(steps)} acceptance steps'\nprint('acceptance doc: A1..A', steps[-1][1:], sep='')
+     ^
+SyntaxError: unexpected character after line continuation character

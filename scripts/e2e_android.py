@@ -76,7 +76,8 @@ def main() -> int:
                 ["adb", "-s", serial, "logcat", "-d", "-s", "SH_DEBUG"],
                 capture_output=True, text=True, check=False,
             ).stdout
-            if '"status":"active"' in logcat.splitlines()[-1] if logcat.splitlines() else False:
+            status_lines = [l for l in logcat.splitlines() if '"status"' in l]
+            if status_lines and '"status":"active"' in status_lines[-1]:
                 break
             time.sleep(3)
 

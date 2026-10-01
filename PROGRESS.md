@@ -68,3 +68,6 @@ One line per event: `YYYY-MM-DD HH:MM · phase N · slice X · ✅|⚠|❌ · no
 2026-10-01 22:09 · phase 5 · 5c-5e · ✅ · CameraEngine (CameraX+MediaPipe 1fps), UsagePoller 1s, sync loop + backoff, wake lock (D-20), debug/boot receivers, manifest wired — lint 0 errors, APK 55MB
 2026-10-01 22:09 · phase 5 · P5.9 · ✅ · SCRIPTED E2E PASS on emulator-5554: pair→remote start→inject ci=20→stress_alert+penalty 300+cooldown on server→inject ci=90→bonus→expiry→locked, logcat clean; 8 screenshots; android rubric 9/9
 2026-10-01 22:09 · phase 5 · gate · ✅ · GATE 5 GREEN (verdict PASS): 8/8 checks incl. e2e + regression gate-4; 4 real bugs fixed en route (duration_s key, wake lock D-20, pairing state reset, camera-FGS eligibility)
+2026-10-02 01:26 · phase 6 · P6.1 · ✅ · system_test.py: real API + virtual child, stress scenario → alert+timeline+ledger, calm scenario → bonus + 0 alerts
+2026-10-02 01:26 · phase 6 · P6.2-P6.3 · ✅ · edge_case_coverage.md (14 rows → named proof, checker-enforced), DEVICE_ACCEPTANCE_TEST.md A1..A20
+2026-10-02 01:26 · phase 6 · gate · ✅ · GATE 6 GREEN (verdict PASS): 5/5 checks incl. full gate-5 chain with live emulator e2e; recipe: clean adb server + wipe-data boot (KI-1)

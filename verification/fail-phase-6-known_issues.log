@@ -1,0 +1,4 @@
+  File "<string>", line 1
+    \nimport pathlib\ntext = pathlib.Path('KNOWN_ISSUES.md').read_text()\nassert 'no open' in text.lower() or '| (none open)' in text, 'open known issues present'\nprint('known issues: none open')
+     ^
+SyntaxError: unexpected character after line continuation character

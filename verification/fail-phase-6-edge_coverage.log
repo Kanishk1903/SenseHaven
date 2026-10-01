@@ -1,0 +1,4 @@
+  File "<string>", line 1
+    \nimport pathlib, re\ntext = pathlib.Path('docs/edge_case_coverage.md').read_text()\nrows = re.findall(r'^\| (\d+) \|', text, re.M)\nrequired = {'1','2','3','4','5','6','9','10','11','14','15','17','18','20'}\nmissing = required - set(rows)\nassert not missing, f'edge rows missing: {missing}'\nfor name in ('RulesEngineTest', 'test_events_idempotent_replay', 'test_sync_shape_and_config_pin_versioning'):\n    assert name in text or any(name in f.read_text() for f in pathlib.Path('api/tests').glob('*.py')) or any(name in f.read_text() for f in pathlib.Path('android/app/src/test').rglob('*.kt')), name\nprint('edge rows 1,2,3,4,5,6,9,10,11,14,15,17,18,20 all mapped')
+     ^
+SyntaxError: unexpected character after line continuation character

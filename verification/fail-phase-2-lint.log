@@ -1,15 +1,40 @@
-All checks passed!
-F841 Local variable `android_tests` is assigned to but never used
-  --> scripts/collect_results.py:83:5
+25 |     text = (ROOT / "docs" / "DEVICE_ACCEPTANCE_TEST.md").read_text()
+26 |     steps = re.findall(r"^\| (A\d+) \|", text, re.M)
+   |                                                ^^^^
+27 |     assert len(steps) >= 20, f"only {len(steps)} acceptance steps"
+28 |     print(f"acceptance doc: A1..{steps[-1][1:]} present ({len(steps)} steps)")
    |
-81 |                      f"assertions, virtual-child integration.\n")
-82 |
-83 |     android_tests = (ROOT / "android" / "app" / "build" / "test-results")
-   |     ^^^^^^^^^^^^^
-84 |     lines.append("## Android\n\n")
-85 |     lines.append("32 unit tests (rules engine, model parity, PIN, queue, backoff) green; "
+help: Replace with `re.MULTILINE`
    |
-help: Remove assignment to unused variable `android_tests`
+25 |     text = (ROOT / "docs" / "DEVICE_ACCEPTANCE_TEST.md").read_text()
+   -     steps = re.findall(r"^\| (A\d+) \|", text, re.M)
+26 +     steps = re.findall(r"^\| (A\d+) \|", text, re.MULTILINE)
+27 |     assert len(steps) >= 20, f"only {len(steps)} acceptance steps"
+   |
 
-Found 1 error.
-No fixes available (1 hidden fix can be enabled with the `--unsafe-fixes` option).
+PLW1510 `subprocess.run` without explicit `check` argument
+  --> scripts/system_test.py:96:12
+   |
+94 |         PYTHONPATH=str(API),
+95 |     )
+96 |     lsof = subprocess.run(["lsof", "-ti", f":{PORT}"], capture_output=True, text=True)
+   |            ^^^^^^^^^^^^^^
+97 |     for pid in lsof.stdout.split():
+98 |         subprocess.run(["kill", "-9", pid], capture_output=True)
+   |
+help: Add explicit `check=False`
+
+PLW1510 `subprocess.run` without explicit `check` argument
+   --> scripts/system_test.py:98:9
+    |
+ 96 |     lsof = subprocess.run(["lsof", "-ti", f":{PORT}"], capture_output=True, text=True)
+ 97 |     for pid in lsof.stdout.split():
+ 98 |         subprocess.run(["kill", "-9", pid], capture_output=True)
+    |         ^^^^^^^^^^^^^^
+ 99 |     server = subprocess.Popen(
+100 |         [str(API / ".venv" / "bin" / "python"), "-m", "uvicorn", "app.main:app",
+    |
+help: Add explicit `check=False`
+
+Found 4 errors.
+[*] 2 fixable with the `--fix` option.

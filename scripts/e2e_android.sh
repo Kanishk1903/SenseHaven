@@ -8,11 +8,33 @@ export ANDROID_HOME="${ANDROID_HOME:-/opt/homebrew/share/android-commandlinetool
 export PATH="$ANDROID_HOME/platform-tools:$JAVA_HOME/bin:$PATH"
 
 SERIAL="${1:-}"
+# validate the requested serial is actually attached; otherwise self-heal
+if [ -n "$SERIAL" ] && ! adb devices | grep -qw "$SERIAL"; then
+  echo "e2e_android: requested serial '$SERIAL' not attached — falling back to autodetect"
+  SERIAL=""
+fi
 if [ -z "$SERIAL" ]; then
   SERIAL="$(adb devices | grep -w device | head -1 | awk '{print $1}')"
 fi
 if [ -z "$SERIAL" ]; then
-  echo "e2e_android: no device/emulator attached (adb devices)" >&2
+  # self-heal: boot the headless AVD (the emulator can die under long chained gate runs)
+  echo "e2e_android: no device attached — booting headless AVD"
+  if ! "$ANDROID_HOME/emulator/emulator" -list-avds 2>/dev/null | grep -q sh_test; then
+    echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd -n sh_test \
+      -k "system-images;android-34;google_apis;arm64-v8a" -d pixel_5 || {
+      echo "e2e_android: cannot create AVD" >&2; exit 1; }
+  fi
+  nohup "$ANDROID_HOME/emulator/emulator" -avd sh_test -no-window -no-audio -no-boot-anim \
+    -gpu swiftshader_indirect -no-snapshot -memory 3072 -no-metrics > /tmp/sh-e2e-emu.log 2>&1 &
+  for _ in $(seq 1 120); do
+    SERIAL="$(adb devices | grep -w device | head -1 | awk '{print $1}')"
+    [ -n "$SERIAL" ] && [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ] && break
+    sleep 3
+  done
+  sleep 10
+fi
+if [ -z "$SERIAL" ]; then
+  echo "e2e_android: emulator did not boot" >&2
   exit 1
 fi
 echo "== e2e on $SERIAL =="

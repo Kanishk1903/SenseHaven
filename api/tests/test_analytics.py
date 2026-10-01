@@ -144,7 +144,9 @@ def test_overview_counters_from_seeded_day(parent_client):
                            heartbeat={"used_s": 600, "camera_ok": True})
     assert response.status_code == 200
 
-    overview = parent_client.get(f"/api/v1/children/{child_id}/analytics/overview?range=today").json()
+    # range=30d keeps this test independent of the IST/UTC midnight boundary (the DST/day
+    # windowing is covered by the timeline tests)
+    overview = parent_client.get(f"/api/v1/children/{child_id}/analytics/overview?range=30d").json()
     assert overview["screen_time_s"] == 600
     assert overview["avg_calm"] == 70.0  # mean of 80, 80, 80, 40
     assert overview["stress_episodes"] == 1
@@ -152,11 +154,11 @@ def test_overview_counters_from_seeded_day(parent_client):
     assert overview["penalty_s"] == 300
     assert overview["sessions_count"] == 1
 
-    usage_response = parent_client.get(f"/api/v1/children/{child_id}/analytics/app-usage?range=today").json()
+    usage_response = parent_client.get(f"/api/v1/children/{child_id}/analytics/app-usage?range=30d").json()
     assert usage_response["items"][0]["package"] == "com.youtube"
     assert usage_response["items"][0]["seconds"] == 480
 
-    sessions = parent_client.get(f"/api/v1/children/{child_id}/analytics/sessions?range=today").json()
+    sessions = parent_client.get(f"/api/v1/children/{child_id}/analytics/sessions?range=30d").json()
     assert sessions[0]["avg_calm"] == 70.0
     kinds = [entry["kind"] for entry in sessions[0]["ledger"]]
     assert kinds == ["bonus", "penalty", "stress_alert"]

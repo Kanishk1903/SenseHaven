@@ -1,37 +1,39 @@
-PASS ml tests
-PASS task hash
-PASS model card
-PASS git hygiene
-PASS ruff
-PASS placeholders
-BLOCKED_ON_H3 dataset — FER2013 not present — complete H3 (see SETUP_REQUIRED.md), then: make ml-data ml-features
-BLOCKED_ON_H3 features — needs the dataset (detection rate >= 0.50 bar)
-BLOCKED_ON_H3 model bars — needs extraction + training (ROC-AUC >= 0.75, balanced accuracy >= 0.68, recall >= 0.60, false-alarm <= 0.35)
-BLOCKED_ON_H3 model json — produced by make ml-export after training (<= 20 KB, validator-clean)
-BLOCKED_ON_H3 vectors — generated from the trained model; Kotlin parity depends on them
-FAIL regression: previous gate (exit 1) — last lines:
-    PASS tests
+        app/routers/analytics.py           32      0   100%
+        app/routers/auth.py                49      0   100%
+        app/routers/children.py            59      5    92%   87-98, 106
+        app/routers/device.py              88      1    99%   35
+        app/routers/devices.py             27      1    96%   46
+        app/routers/ops.py                 16      0   100%
+        app/routers/pairing.py             17      0   100%
+        app/routers/parents.py             18      0   100%
+        app/routers/sessions.py            65     17    74%   35, 44, 48, 71-88, 119, 121-130
+        app/schemas/__init__.py             0      0   100%
+        app/schemas/auth.py                39      0   100%
+        app/schemas/child.py               29      2    93%   42-43
+        app/schemas/child_settings.py      32      1    97%   45
+        app/schemas/device.py              58      0   100%
+        app/security/__init__.py            0      0   100%
+        app/security/hashing.py            35      2    94%   42-43
+        app/security/limiter.py            30      3    90%   28-30
+        app/services/__init__.py            0      0   100%
+        app/services/analytics.py         125     13    90%   34, 121, 125, 130, 164, 203-204, 250-251, 256, 275-285
+        app/services/children.py            9      0   100%
+        app/services/commands.py           10      0   100%
+        app/services/events.py            100      1    99%   88
+        app/services/pairing.py            30      1    97%   34
+        app/services/settings.py           17      1    94%   14
+        app/static_serving.py              30      2    93%   43-44
+        -------------------------------------------------------------
+        TOTAL                            1289     76    94%
+        Required test coverage of 60% reached. Total coverage: 94.10%
+        =========================== short test summary info ============================
+        FAILED tests/test_analytics.py::test_overview_counters_from_seeded_day - asse...
     PASS no-skips
     PASS idor
     PASS security
     PASS openapi
     PASS virtual child
-    FAIL lint (exit 1) — last lines:
-        All checks passed!
-        F841 Local variable `android_tests` is assigned to but never used
-          --> scripts/collect_results.py:83:5
-           |
-        81 |                      f"assertions, virtual-child integration.\n")
-        82 |
-        83 |     android_tests = (ROOT / "android" / "app" / "build" / "test-results")
-           |     ^^^^^^^^^^^^^
-        84 |     lines.append("## Android\n\n")
-        85 |     lines.append("32 unit tests (rules engine, model parity, PIN, queue, backoff) green; "
-           |
-        help: Remove assignment to unused variable `android_tests`
-        
-        Found 1 error.
-        No fixes available (1 hidden fix can be enabled with the `--unsafe-fixes` option).
+    PASS lint
     PASS placeholders
     PASS regression: previous gate
     gate-2: verdict FAIL — written to verification/phase-2.json
