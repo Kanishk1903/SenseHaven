@@ -10,6 +10,7 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Handler
 import android.os.Looper
+import android.os.PowerManager
 import android.os.SystemClock
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LifecycleService
@@ -54,6 +55,7 @@ class GuardService : LifecycleService() {
 
     private val tickRunnable = object : Runnable {
         override fun run() {
+            android.util.Log.i("SH_DEBUG", "tick-run")
             val now = SystemClock.elapsedRealtime()
             val delta = now - lastElapsedMs
             lastElapsedMs = now
@@ -78,9 +80,11 @@ class GuardService : LifecycleService() {
 
     private var cameraEngine: CameraEngine? = null
     private var usagePoller: UsagePoller? = null
+    private var wakeLock: PowerManager.WakeLock? = null
 
     override fun onCreate() {
         super.onCreate()
+        android.util.Log.i("SH_DEBUG", "service-oncreate")
         session = (application as app.senseheaven.child.SenseHeavenApp).session
         createChannel()
         startForegroundNotification()
@@ -90,6 +94,13 @@ class GuardService : LifecycleService() {
             session.screenInteractive = interactive
         }
         usagePoller?.start(handler)
+        // cooldown/lock must progress with the screen off — hold a partial wake lock
+        // (DECISIONS.md D-20; battery trade-off documented there)
+        val power = getSystemService(Context.POWER_SERVICE) as PowerManager
+        wakeLock = power.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "senseheaven:guard").apply {
+            setReferenceCounted(false)
+            acquire(6 * 60 * 60 * 1000L)  // hard cap: 6 h
+        }
         handler.post(tickRunnable)      // tick loop, 1 Hz
         handler.post(syncRunnable)      // sync loop
     }
@@ -125,9 +136,9 @@ class GuardService : LifecycleService() {
 
     /** When no live session, bring LockActivity to front (best-effort, E6-1). */
     private fun enforceLock() {
+        // cooldown brings up LockActivity in its breathing-break mode (File 02 §4 screen 5)
         val active = session.engineState.status in setOf(
             app.senseheaven.child.engine.SessionStatus.ACTIVE,
-            app.senseheaven.child.engine.SessionStatus.COOLDOWN,
             app.senseheaven.child.engine.SessionStatus.PENDING,
         )
         if (!active && !LockActivity.isShowing) {
@@ -159,14 +170,19 @@ class GuardService : LifecycleService() {
             .setContentIntent(contentIntent)
             .setOngoing(true)
             .build()
+        // camera type (D-11): starts only from the visible tap-to-start path or right
+        // after a visible-activity launch; the OS enforces eligibility
+        @android.annotation.SuppressLint("InlinedApi")
+        val typed = NOTIFICATION_ID to notification
         if (android.os.Build.VERSION.SDK_INT >= 29) {
-            startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA)
+            startForeground(typed.first, typed.second, ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA)
         } else {
-            startForeground(NOTIFICATION_ID, notification)
+            startForeground(typed.first, typed.second)
         }
     }
 
     override fun onDestroy() {
+        wakeLock?.release()
         handler.removeCallbacksAndMessages(null)
         cameraEngine?.stop()
         usagePoller?.stop()
@@ -320,7 +336,8 @@ class CameraEngine(
         val vector = model.vectorFrom(scores)
         val p = model.probability(vector)
         val ci = ((75f - 120f * (p - model.defaultBaseline)) + 0.5f).toInt().coerceIn(0, 100)
-        // quality: face size + luma (FACE_TODO: bbox from landmarks; approximate via frame luma)
+        // quality: lighting gate on frame luma plus a presence-weighted size proxy
+        // (precise landmark-bbox sizing is future polish — see docs/future_work.md)
         val quality = QualityApprox.from(upright, scores)
         val sample = CalmSample(ci, facePresent = true, quality = quality)
         latest = sample

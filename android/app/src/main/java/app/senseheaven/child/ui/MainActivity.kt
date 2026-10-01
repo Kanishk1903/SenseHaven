@@ -10,6 +10,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -139,6 +140,7 @@ fun SenseHeavenFlow(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(Color(0xFF1B2350))
             .safeDrawingPadding()
             .verticalScroll(rememberScrollState())
             .padding(24.dp),
@@ -315,7 +317,10 @@ fun HomeScreen(onStartCounting: () -> Unit, onOpenLock: () -> Unit) {
     val app = LocalContext.current.applicationContext as SenseHeavenApp
     val ui by app.session.ui.collectAsState()
     Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF1B2350))
+            .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -327,7 +332,7 @@ fun HomeScreen(onStartCounting: () -> Unit, onOpenLock: () -> Unit) {
             "ended", "expired" -> "Screen time is paused"
             else -> "Waiting for your parent…"
         }
-        Text(statusText, fontSize = 24.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFFF2F3FF))
+        Text(statusText, fontSize = 24.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFFF2F3FF), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
         Spacer(Modifier.height(12.dp))
         Text(
             text = formatRemaining(maxOf(0, ui.remainingS)),

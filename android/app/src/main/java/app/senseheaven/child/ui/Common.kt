@@ -1,5 +1,6 @@
 package app.senseheaven.child.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -61,11 +62,12 @@ private val consentCards = listOf(
 fun ConsentScreenBody(onUnderstood: () -> Unit) {
     Column(
         modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
+            .fillMaxWidth()
+            .background(Color(0xFF1B2350)),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
+        Spacer(Modifier.height(40.dp))
         Text("SenseHeaven", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color(0xFFF2F3FF))
         Spacer(Modifier.height(6.dp))
         Text("Before we start, here is the honest deal.", fontSize = 15.sp, color = Color(0xFFB9C2F0))

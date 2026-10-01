@@ -16,7 +16,7 @@ android {
         versionCode = 1
         versionName = "1.0.0"
         // LAN backend for the debug build (File 03 §4.6); release uses the Render URL.
-        buildConfigField("String", "BASE_URL", "\"${project.findProperty("baseUrl") ?: "http://10.0.2.2:8000"}\"")
+        buildConfigField("String", "BASE_URL", "\"${project.findProperty("baseUrl") ?: "http://10.0.2.2:8000/api/v1/"}\"")
     }
 
     buildTypes {

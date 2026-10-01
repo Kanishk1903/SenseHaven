@@ -6,6 +6,7 @@ import android.content.Intent
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import app.senseheaven.child.services.GuardService
 import kotlinx.coroutines.launch
 
 /**
@@ -27,12 +28,14 @@ class DebugReceiver : BroadcastReceiver() {
         when (intent.action) {
             "app.senseheaven.debug.PAIR" -> {
                 val code = intent.getStringExtra("code") ?: return
+                GuardService.start(context)
                 CoroutineScope(Dispatchers.IO).launch {
                     val (ok, error) = session.pair(code)
                     Log.i("SH_DEBUG", "{\"action\":\"pair\",\"ok\":$ok,\"error\":\"$error\"}")
                 }
             }
             "app.senseheaven.debug.INJECT" -> {
+                GuardService.start(context)
                 val ci = intent.getIntExtra("ci", 75)
                 session.injectCalmIndex(ci)
                 Log.i("SH_DEBUG", "{\"action\":\"inject\",\"ci\":$ci}")

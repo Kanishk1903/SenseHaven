@@ -1,0 +1,19 @@
+PASS error codes
+PASS settings schema
+PASS tokens generated
+PASS contrast
+FAIL placeholders (exit 1) — last lines:
+    ./android/app/src/main/java/app/senseheaven/child/services/GuardService.kt:333:        // quality: face size + luma (FACE_TODO: bbox from landmarks; approximate via frame luma)
+    no_placeholders: FAIL (hits above)
+FAIL regression: previous gate (exit 1) — last lines:
+    PASS layout
+    PASS doctor
+    PASS db
+    FAIL placeholders (exit 1) — last lines:
+        ./android/app/src/main/java/app/senseheaven/child/services/GuardService.kt:333:        // quality: face size + luma (FACE_TODO: bbox from landmarks; approximate via frame luma)
+        no_placeholders: FAIL (hits above)
+    PASS gitignore
+    PASS runner
+    BLOCKED_ON_H1 ci — gh not authenticated or no origin remote — complete H1 (gh auth login + push), then re-run make gate-0
+    gate-0: verdict FAIL — written to verification/phase-0.json
+gate-1: verdict FAIL — written to verification/phase-1.json

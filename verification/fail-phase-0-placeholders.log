@@ -1,0 +1,2 @@
+./android/app/src/main/java/app/senseheaven/child/services/GuardService.kt:333:        // quality: face size + luma (FACE_TODO: bbox from landmarks; approximate via frame luma)
+no_placeholders: FAIL (hits above)

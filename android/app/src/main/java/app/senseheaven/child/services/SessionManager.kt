@@ -96,11 +96,16 @@ class SessionManager(
     private var lastSeenEmotionAtMs = 0L
 
     private val backoff = app.senseheaven.child.engine.Backoff()
+    private var cachedVerifier: PinVerifier? = null
     private var syncAttempt = 0
     private val pinLockout = app.senseheaven.child.engine.PinLockout()
 
     /** Restore persisted engine + queue (E6-4: reboot mid-session restores state). */
-    suspend fun restore() {
+    suspend fun restore() = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        restoreIO()
+    }
+
+    private suspend fun restoreIO() {
         val paired = store.paired.first()
         token = paired.deviceToken
         _ui.value = _ui.value.copy(paired = paired.deviceToken != null, childName = paired.childName)
@@ -114,6 +119,12 @@ class SessionManager(
         }
         store.loadEngineState()?.let { raw ->
             runCatching { engineState = RulesEngine.deserialize(raw) }
+        }
+        runCatching {
+            val pairedNow = paired
+            pairedNow.pinVerifierJson?.let { raw ->
+                cachedVerifier = json.decodeFromString(PinVerifier.serializer(), raw)
+            }
         }
         store.loadQueue()?.let { raw -> runCatching { queue.deserialize(raw) } }
         config = parseConfig(paired.configJson)
@@ -198,8 +209,9 @@ class SessionManager(
     suspend fun applyCommand(command: CommandDto) {
         val payload = command.payload
         fun int(key: String) = (payload[key] as? JsonPrimitive)?.content?.toIntOrNull() ?: 0
+        val amount = int(if (command.kind == "start_session") "duration_s" else "delta_s")
         val (next, events) = RulesEngine.applyCommand(
-            engineState, command.id, command.kind, int("delta_s"), config,
+            engineState, command.id, command.kind, amount, config,
         )
         if (command.kind == "start_session") {
             sessionId = (payload["session_id"] as? JsonPrimitive)?.content ?: sessionId ?: UUID.randomUUID().toString()
@@ -238,7 +250,7 @@ class SessionManager(
     /** One emotion sample per 10 s (mean of valid CI values since the last upload). */
     fun enqueueEmotion(calmIndex: Int, label: String, quality: Float, facePresent: Boolean) {
         val now = System.currentTimeMillis()
-        if (now - lastSeenEmotionAtMs < 9_000) return
+        if (now - lastSeenEmotionAtMs < 9_000L) return
         lastSeenEmotionAtMs = now
         queue.add(
             QueuedEvent(
@@ -295,7 +307,11 @@ class SessionManager(
     )
 
     /** One sync round: pull config/commands, push a batch, ack commands. Returns success. */
-    suspend fun syncOnce(): Boolean {
+    suspend fun syncOnce(): Boolean = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        syncOnceIO()
+    }
+
+    private suspend fun syncOnceIO(): Boolean {
         val api = this.api ?: return false
         return try {
             val response = api.sync(configVersion, pinVersion)
@@ -309,6 +325,7 @@ class SessionManager(
             }
             response.pin?.let { pinDto ->
                 pinVersion = response.pinVersion
+                cachedVerifier = PinVerifier(pinDto.iterations, pinDto.saltB64, pinDto.hashB64)
                 store.updatePin(response.pinVersion, json.encodeToString(PinVerifierDto.serializer(), pinDto))
             }
             for (command in response.commands) {
@@ -388,12 +405,20 @@ class SessionManager(
                 ),
             )
             token = response.deviceToken
+            // new pairing = fresh engine: a previous child's ended session must not leak
+            engineState = EngineState()
             sessionId = null
+            sessionStartedAt = null
+            queue.let { /* queue cleared below via wipe+save */ }
+            store.wipe()          // clears token/queue/engine keys...
+            store.savePairing(response)  // ...then the new pairing is written
+            store.saveQueue(queue.serialize())
             this.api = apiFactory(baseUrl) { chain ->
                 chain.proceed(chain.request().newBuilder()
                     .header("Authorization", "Bearer ${response.deviceToken}").build())
             }
-            store.savePairing(response)
+            fastForwardDebtS = 0
+            injectedSample = null
             config = parseConfig(response.config.toString())
             configVersion = response.configVersion
             pinVersion = response.pinVersion
@@ -406,16 +431,16 @@ class SessionManager(
 
     /** Local PIN check against the server verifier (never logs the PIN). */
     fun verifyPin(pin: String): Boolean {
-        val paired = kotlinx.coroutines.runBlocking { store.paired.first() }
-        val verifierJson = paired.pinVerifierJson ?: return false
-        val verifier = runCatching {
-            json.decodeFromString(PinVerifier.serializer(), verifierJson)
-        }.getOrNull() ?: return false
+        val verifier = cachedVerifier ?: return false
         val ok = PinVerifierEngine.verify(pin, verifier)
         if (ok) pinLockout.recordSuccess() else pinLockout.recordFailure(System.currentTimeMillis())
-        _ui.value = _ui.value.copy(lockedOutUntilMs = System.currentTimeMillis() + pinLockout.remainingLockoutMs(System.currentTimeMillis()))
+        _ui.value = _ui.value.copy(
+            lockedOutUntilMs = System.currentTimeMillis() + pinLockout.remainingLockoutMs(System.currentTimeMillis()),
+        )
         return ok
     }
+
+    suspend fun pinLockedOutNow(): Boolean = pinLockout.isLockedOut(System.currentTimeMillis())
 
     fun isPinLockedOut(): Boolean = pinLockout.isLockedOut(System.currentTimeMillis())
 

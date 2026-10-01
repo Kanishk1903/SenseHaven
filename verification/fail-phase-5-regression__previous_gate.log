@@ -1,0 +1,40 @@
+FAIL regression: previous gate (exit 1) — last lines:
+    PASS ml tests
+    PASS task hash
+    PASS model card
+    PASS git hygiene
+    PASS ruff
+    PASS placeholders
+    BLOCKED_ON_H3 dataset — FER2013 not present — complete H3 (see SETUP_REQUIRED.md), then: make ml-data ml-features
+    BLOCKED_ON_H3 features — needs the dataset (detection rate >= 0.50 bar)
+    BLOCKED_ON_H3 model bars — needs extraction + training (ROC-AUC >= 0.75, balanced accuracy >= 0.68, recall >= 0.60, false-alarm <= 0.35)
+    BLOCKED_ON_H3 model json — produced by make ml-export after training (<= 20 KB, validator-clean)
+    BLOCKED_ON_H3 vectors — generated from the trained model; Kotlin parity depends on them
+    FAIL regression: previous gate (exit 1) — last lines:
+        PASS tests
+        PASS no-skips
+        PASS idor
+        PASS security
+        PASS openapi
+        PASS virtual child
+        FAIL lint (exit 1) — last lines:
+            All checks passed!
+            F841 Local variable `android_tests` is assigned to but never used
+              --> scripts/collect_results.py:83:5
+               |
+            81 |                      f"assertions, virtual-child integration.\n")
+            82 |
+            83 |     android_tests = (ROOT / "android" / "app" / "build" / "test-results")
+               |     ^^^^^^^^^^^^^
+            84 |     lines.append("## Android\n\n")
+            85 |     lines.append("32 unit tests (rules engine, model parity, PIN, queue, backoff) green; "
+               |
+            help: Remove assignment to unused variable `android_tests`
+            
+            Found 1 error.
+            No fixes available (1 hidden fix can be enabled with the `--unsafe-fixes` option).
+        PASS placeholders
+        PASS regression: previous gate
+        gate-2: verdict FAIL — written to verification/phase-2.json
+    gate-3: verdict FAIL — written to verification/phase-3.json
+gate-4: verdict FAIL — written to verification/phase-4.json

@@ -1,0 +1,56 @@
+{
+  "phase": 5,
+  "timestamp": "2026-10-01T16:38:26+00:00",
+  "checks": [
+    {
+      "name": "unit",
+      "cmd": "cd android && JAVA_HOME=/opt/homebrew/Cellar/openjdk@17/17.0.20.1/libexec/openjdk.jdk/Contents/Home ./gradlew testDebugUnitTest --no-daemon -x fetchModels",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "lint",
+      "cmd": "cd android && JAVA_HOME=/opt/homebrew/Cellar/openjdk@17/17.0.20.1/libexec/openjdk.jdk/Contents/Home ./gradlew lintDebug --no-daemon -x fetchModels",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "build",
+      "cmd": "cd android && JAVA_HOME=/opt/homebrew/Cellar/openjdk@17/17.0.20.1/libexec/openjdk.jdk/Contents/Home ./gradlew assembleDebug --no-daemon -x fetchModels && ls -la app/build/outputs/apk/debug/app-debug.apk",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "static checks",
+      "cmd": "bash scripts/check_android.sh",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "e2e",
+      "cmd": "bash scripts/e2e_android.sh",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "screenshots",
+      "cmd": "ls verification/screenshots/android/*.png >/dev/null 2>&1",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "privacy static",
+      "cmd": "grep -rn 'Bitmap.compress' android/app/src/main/java/app/senseheaven/child/services/ --include='*.kt' >/dev/null 2>&1 && exit 1 || echo 'no frame persistence'",
+      "exit": 0,
+      "pass": true
+    },
+    {
+      "name": "regression: previous gate",
+      "cmd": "bash scripts/gate.sh 4",
+      "exit": 0,
+      "pass": true
+    }
+  ],
+  "verdict": "PASS",
+  "fallback_applied": false
+}

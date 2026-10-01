@@ -47,7 +47,9 @@ class LockActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            LockScreen()
+            androidx.compose.runtime.CompositionLocalProvider(LocalActivityHolder provides this) {
+                LockScreen()
+            }
         }
     }
 
@@ -62,6 +64,7 @@ class LockActivity : ComponentActivity() {
     }
 
     @Deprecated("Deprecated in Java")
+    @Suppress("MissingSuperCall")
     override fun onBackPressed() {
         // back is disabled on the lock screen (File 02 §4 screen 6)
     }
@@ -70,7 +73,7 @@ class LockActivity : ComponentActivity() {
 @Composable
 fun LockScreen() {
     val app = LocalContext.current.applicationContext as app.senseheaven.child.SenseHeavenApp
-    val activity = LocalContext.current as? ComponentActivity
+    val activity = LocalActivityHolder.current
     val ui by app.session.ui.collectAsState()
     var pin by androidx.compose.runtime.remember { mutableStateOf("") }
     var error by androidx.compose.runtime.remember { mutableStateOf<String?>(null) }
