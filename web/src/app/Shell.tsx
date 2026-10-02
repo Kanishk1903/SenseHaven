@@ -118,7 +118,7 @@ function NavLinks({
                       <span className="hidden lg:inline">{item.label}</span>
                       <span className="sr-only lg:hidden">{item.label}</span>
                       {item.label.startsWith("Alerts") && unread > 0 ? (
-                        <span className="tnum ml-auto rounded-pill bg-stress px-1.5 text-[12px] leading-none font-semibold text-on-primary">
+                        <span className="tnum ml-auto rounded-pill bg-stress-fg px-1.5 text-[12px] leading-none font-semibold text-on-primary">
                           {unread}
                         </span>
                       ) : null}
@@ -184,7 +184,7 @@ export function Shell() {
         >
           <Bell size={20} aria-hidden />
           {unread > 0 ? (
-            <span className="tnum absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-pill bg-stress px-1 text-[12px] leading-none font-semibold text-on-primary">
+            <span className="tnum absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-pill bg-stress-fg px-1 text-[12px] leading-none font-semibold text-on-primary">
               {unread}
             </span>
           ) : null}

@@ -51,6 +51,7 @@ export function AlertsPage() {
           <Button
             key={option}
             size="sm"
+            className="min-w-11"
             variant={filter === option ? "primary" : "outline"}
             aria-pressed={filter === option}
             onClick={() => setFilter(option)}

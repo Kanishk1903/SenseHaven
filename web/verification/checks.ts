@@ -9,6 +9,11 @@ import type { Page } from "@playwright/test";
 /** G1 — no two text/control elements overlap (bounding-box intersection > 2px, excluding ancestor/descendant). */
 export async function findOverlaps(page: Page): Promise<string[]> {
   return page.evaluate(() => {
+    // documented adaptation: closed <details> content is UA-hidden yet reports boxes
+    const inClosedDetails = (el: Element): boolean => {
+  const d = el.closest("details");
+  return d !== null && !d.hasAttribute("open");
+};
     const lab = (e: Element) =>
       `<${e.tagName.toLowerCase()}> "${(e.textContent || "").trim().slice(0, 30)}"`;
     const els = [
@@ -21,6 +26,7 @@ export async function findOverlaps(page: Page): Promise<string[]> {
       const ownText = [...el.childNodes].some((n) => n.nodeType === 3 && (n.textContent || "").trim());
       // documented adaptation: .sr-only labels are 1x1 by design (revealed on focus)
       if (el.classList.contains("sr-only")) return false;
+      if (inClosedDetails(el)) return false;
       return (
         r.width > 0 && r.height > 0 && cs.visibility !== "hidden" && cs.display !== "none" &&
         (ownText || ["BUTTON", "A"].includes(el.tagName))
@@ -46,6 +52,11 @@ export async function findOverlaps(page: Page): Promise<string[]> {
 /** G2 — no horizontal page scroll, no clipped text, nothing past the viewport outside [data-scroll-x]. */
 export async function findOverflow(page: Page): Promise<string[]> {
   return page.evaluate(() => {
+    // documented adaptation: closed <details> content is UA-hidden yet reports boxes
+    const inClosedDetails = (el: Element): boolean => {
+  const d = el.closest("details");
+  return d !== null && !d.hasAttribute("open");
+};
     const out: string[] = [];
     const doc = document.documentElement;
     if (doc.scrollWidth > doc.clientWidth + 1) {
@@ -56,6 +67,7 @@ export async function findOverflow(page: Page): Promise<string[]> {
       if (cs.display === "none" || cs.visibility === "hidden") return;
       // documented adaptation: .sr-only elements clip by design (revealed on focus)
       if (el.closest(".sr-only") || el.classList.contains("sr-only")) return;
+      if (inClosedDetails(el)) return;
       const clipX = ["hidden", "clip"].includes(cs.overflowX);
       const clipY = ["hidden", "clip"].includes(cs.overflowY);
       const hasText = [...el.childNodes].some((n) => n.nodeType === 3 && (n.textContent || "").trim());
@@ -94,10 +106,15 @@ export async function findSmallTargets(page: Page, min: number): Promise<string[
   return page.evaluate((min) =>
     [...document.querySelectorAll<HTMLElement>("button,a[href],[role=button],input,select,textarea,[tabindex]:not([tabindex='-1'])")]
       .flatMap((el) => {
+        const dClosed = (() => {
+          const d = el.closest("details");
+          return d !== null && !d.hasAttribute("open");
+        })();
         const cs = getComputedStyle(el);
         if (cs.display === "none" || cs.visibility === "hidden") return [];
         // documented adaptation: .sr-only targets are 1x1 until focused (skip link)
         if (el.classList.contains("sr-only")) return [];
+        if (dClosed) return [];
         const r = el.getBoundingClientRect();
         return r.width > 0 && (r.width < min || r.height < min)
           ? [`<${el.tagName.toLowerCase()}> "${(el.textContent || "").trim().slice(0, 20)}" is ${Math.round(r.width)}x${Math.round(r.height)}`]

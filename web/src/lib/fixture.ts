@@ -31,6 +31,41 @@ export function withFixture<T>(real: () => Promise<T>, fixtureData: () => T): ()
   return () => Promise.resolve(fixtureData());
 }
 
+/** Settings-page fixtures (child settings + paired device) so the whole dashboard
+ *  renders from the harness without the API. */
+export const FIXTURE_SETTINGS = {
+  config_version: 1,
+  good_bonus_min: 15,
+  stress_penalty_min: 5,
+  cooldown_min: 5,
+  max_bonus_per_session_min: 30,
+  calm_threshold: 70,
+  stress_threshold: 35,
+  sustained_stress_s: 120,
+  sustained_calm_s: 300,
+  penalty_lockout_s: 900,
+  monitoring_enabled: true,
+  activity_log_enabled: true,
+  show_mood_to_child: true,
+  blocked_packages: ["com.example.blocked"],
+  allowed_packages: ["com.example.allowed"],
+};
+
+export const FIXTURE_DEVICES = [
+  {
+    id: "dev-1",
+    name: "Aarav's phone",
+    android_version: "14",
+    app_version: "1.0.0",
+    paired_at: "2026-09-20T10:00:00Z",
+    last_seen_at: FIXTURE_NOW,
+    revoked_at: null,
+    permissions: { camera: true, notifications: true, usage_access: true, overlay: true, camera_ok: true },
+  },
+];
+
+export const FIXTURE_APK = { version: "1.0.0", url: "/apk.json", sha256: "fixture0123456789abcdef", size: 24_117_248 };
+
 /** Auth must never hang or reject under fixtures: it is infrastructure, not page state. */
 export function withFixtureAlways<T>(real: () => Promise<T>, fixtureData: () => T): () => Promise<T> {
   if (!activeFixture()) return real;

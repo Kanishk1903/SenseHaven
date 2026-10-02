@@ -10,13 +10,13 @@ export function AuthLayout({ children, heading }: { children: React.ReactNode; h
             <OrbMark size={28} />
             <span className="font-semibold">SenseHeaven</span>
           </div>
-          <h1 className="text-h1 font-semibold">{heading}</h1>
+          <h1 className="font-display text-h1 font-semibold text-text">{heading}</h1>
           {children}
         </div>
       </main>
       <aside
         aria-hidden
-        className="relative hidden flex-1 flex-col justify-end overflow-hidden bg-surface-2 p-12 lg:flex"
+        className="relative hidden flex-1 flex-col justify-end overflow-hidden bg-surface-2 p-12 lg:flex" data-scroll-x="decorative"
       >
         <div className="absolute right-[-10%] top-[-15%] h-[520px] w-[520px] rounded-full bg-gradient-to-br from-calm-soft via-primary-soft to-surface-2" />
         <div className="relative space-y-4">

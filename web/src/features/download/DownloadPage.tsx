@@ -4,13 +4,17 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/PageHeader";
 import { api } from "@/lib/api";
+import { withFixtureAlways, FIXTURE_APK } from "@/lib/fixture";
 
 type ApkInfo = { version: string; url: string; sha256: string; size: number };
 
 export function DownloadPage() {
   const apk = useQuery({
     queryKey: ["apk"],
-    queryFn: () => api.get<ApkInfo>("/apk.json").catch(() => fetch("/apk.json").then((response) => response.json() as Promise<ApkInfo>)),
+    queryFn: withFixtureAlways(
+      () => api.get<ApkInfo>("/apk.json").catch(() => fetch("/apk.json").then((response) => response.json() as Promise<ApkInfo>)),
+      () => FIXTURE_APK,
+    ),
     staleTime: 60_000,
   });
 
@@ -36,7 +40,7 @@ export function DownloadPage() {
                 </div>
                 <a
                   href={apk.data.url}
-                  className="inline-flex h-10 items-center gap-2 rounded-control bg-primary px-4 font-medium text-on-primary hover:bg-primary-hover"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-control bg-primary px-4 font-medium text-on-primary hover:bg-primary-hover lg:min-h-10"
                   download
                 >
                   <Download size={16} aria-hidden /> Download APK

@@ -18,7 +18,7 @@ export const Slider = forwardRef<HTMLDivElement, React.ComponentProps<typeof Sli
         <SliderPrimitive.Thumb
           key={index}
           aria-label={props["aria-label"] ? `${props["aria-label"]} ${index + 1}` : `Handle ${index + 1}`}
-          className="block h-4 w-4 rounded-pill border-2 border-primary bg-surface shadow-elev1"
+          className="block h-11 w-11 rounded-pill border-2 border-primary bg-surface shadow-elev1 lg:h-6 lg:w-6"
         />
       ))}
     </SliderPrimitive.Root>

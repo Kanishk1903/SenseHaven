@@ -121,7 +121,7 @@ export function RegisterPage() {
         </Button>
         <p className="text-center text-secondary text-text-muted">
           Already have an account?{" "}
-          <Link to="/login" className="font-medium text-primary hover:underline">
+          <Link to="/login" className="inline-flex min-h-11 items-center font-medium text-primary hover:underline lg:min-h-6">
             Sign in
           </Link>
         </p>

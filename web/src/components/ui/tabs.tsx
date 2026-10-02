@@ -9,7 +9,7 @@ export const TabsList = forwardRef<HTMLDivElement, React.ComponentProps<typeof T
   ({ className, ...props }, ref) => (
     <TabsPrimitive.List
       ref={ref}
-      className={cn("inline-flex h-10 items-center gap-1 rounded-control bg-surface-2 p-1", className)}
+      className={cn("inline-flex min-h-11 items-center gap-1 rounded-control bg-surface-2 p-1 lg:min-h-10", className)}
       {...props}
     />
   ),
@@ -21,7 +21,7 @@ export const TabsTrigger = forwardRef<HTMLButtonElement, React.ComponentProps<ty
     <TabsPrimitive.Trigger
       ref={ref}
       className={cn(
-        "inline-flex h-8 items-center rounded-control px-3 text-secondary font-medium",
+        "inline-flex min-h-11 items-center rounded-control px-3 text-secondary font-medium lg:min-h-8",
         "data-[state=active]:bg-surface data-[state=active]:text-text",
         "text-text-muted hover:text-text",
         className,

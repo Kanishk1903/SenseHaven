@@ -183,7 +183,7 @@ export function CalmChart({
               aria-pressed={!fullDay}
               onClick={() => setFullDay(false)}
               className={cn(
-                "rounded-[7px] px-2 py-0.5",
+                "inline-flex min-h-11 min-w-11 items-center justify-center rounded-[7px] px-3 lg:min-h-6 lg:min-w-0",
                 !fullDay ? "bg-surface text-text shadow-elev1" : "text-text-muted",
               )}
             >
@@ -194,7 +194,7 @@ export function CalmChart({
               aria-pressed={fullDay}
               onClick={() => setFullDay(true)}
               className={cn(
-                "rounded-[7px] px-2 py-0.5",
+                "inline-flex min-h-11 min-w-11 items-center justify-center rounded-[7px] px-3 lg:min-h-6 lg:min-w-0",
                 fullDay ? "bg-surface text-text shadow-elev1" : "text-text-muted",
               )}
             >
@@ -244,18 +244,18 @@ export function CalmChart({
           {[0, 35, 70, 100].map((v) => (
             <g key={v}>
               <line x1={PAD_LEFT} y1={y(v)} x2={PAD_LEFT + plotW} y2={y(v)} stroke="var(--border)" strokeWidth="1" />
-              <text x={PAD_LEFT - 6} y={y(v) + 3} textAnchor="end" fontSize="10" fill="var(--text-subtle)" className="tnum">
+              <text x={PAD_LEFT - 6} y={y(v) + 3} textAnchor="end" fontSize="12" fill="var(--text-subtle)" className="tnum">
                 {v}
               </text>
             </g>
           ))}
-          <text x={PAD_LEFT + plotW + 6} y={y(85) + 3} fontSize="10" fill="var(--calm-fg)">
+          <text x={PAD_LEFT + plotW + 6} y={y(85) + 3} fontSize="12" fill="var(--calm-fg)">
             Calm
           </text>
-          <text x={PAD_LEFT + plotW + 6} y={y(50) + 3} fontSize="10" fill="var(--text-subtle)">
+          <text x={PAD_LEFT + plotW + 6} y={y(50) + 3} fontSize="12" fill="var(--text-subtle)">
             Okay
           </text>
-          <text x={PAD_LEFT + plotW + 6} y={y(15) + 3} fontSize="10" fill="var(--stress-fg)">
+          <text x={PAD_LEFT + plotW + 6} y={y(15) + 3} fontSize="12" fill="var(--stress-fg)">
             Stressed
           </text>
 
@@ -331,7 +331,7 @@ export function CalmChart({
           {ticks.map((m) => (
             <g key={m}>
               <line x1={x(m)} y1={PAD_TOP + plotH} x2={x(m)} y2={PAD_TOP + plotH + 4} stroke="var(--border-strong)" />
-              <text x={x(m)} y={PAD_TOP + plotH + 15} textAnchor="middle" fontSize="10" fill="var(--text-subtle)" className="tnum">
+              <text x={x(m)} y={PAD_TOP + plotH + 15} textAnchor="middle" fontSize="12" fill="var(--text-subtle)" className="tnum">
                 {fmtTime(new Date(new Date().setHours(Math.floor(m / 60), m % 60, 0, 0)).toISOString())}
               </text>
             </g>

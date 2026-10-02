@@ -132,7 +132,7 @@ export function DayRibbon({
             type="button"
             aria-pressed={!fullDay}
             onClick={() => setFullDay(false)}
-            className={cn("inline-flex min-h-11 items-center rounded-[7px] px-3 lg:min-h-6", !fullDay ? "bg-surface text-text shadow-elev1" : "text-text-muted")}
+            className={cn("inline-flex min-h-11 min-w-11 items-center justify-center rounded-[7px] px-3 lg:min-h-6 lg:min-w-0", !fullDay ? "bg-surface text-text shadow-elev1" : "text-text-muted")}
           >
             Active hours
           </button>
@@ -140,7 +140,7 @@ export function DayRibbon({
             type="button"
             aria-pressed={fullDay}
             onClick={() => setFullDay(true)}
-            className={cn("inline-flex min-h-11 items-center rounded-[7px] px-3 lg:min-h-6", fullDay ? "bg-surface text-text shadow-elev1" : "text-text-muted")}
+            className={cn("inline-flex min-h-11 min-w-11 items-center justify-center rounded-[7px] px-3 lg:min-h-6 lg:min-w-0", fullDay ? "bg-surface text-text shadow-elev1" : "text-text-muted")}
           >
             Full day
           </button>

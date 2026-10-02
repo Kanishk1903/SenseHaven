@@ -20,6 +20,7 @@ import {
 } from "@/features/apiHooks";
 import { api } from "@/lib/api";
 import { formatDuration } from "@/lib/format";
+import { withFixtureAlways, fixtureTimeline, fixtureAppUsage } from "@/lib/fixture";
 import { CalmChart } from "@/components/charts/CalmChart";
 import { useChild } from "@/app/childSelection";
 
@@ -32,7 +33,7 @@ function shiftDate(iso: string, days: number): string {
 function useDistribution(childId: string | undefined, date: string) {
   return useQuery({
     queryKey: ["timeline", childId, date],
-    queryFn: () => api.get<Timeline>(`/children/${childId}/analytics/emotion-timeline?date=${date}`),
+    queryFn: withFixtureAlways(() => api.get<Timeline>(`/children/${childId}/analytics/emotion-timeline?date=${date}`), () => fixtureTimeline("live-neutral")),
     enabled: Boolean(childId),
   });
 }
@@ -158,8 +159,11 @@ function ScreenTimeTab() {
   const [range, setRange] = useState<"7d" | "30d">("7d");
   const daily = useQuery({
     queryKey: ["appUsage", child?.id, range],
-    queryFn: () => api.get<{ items: { package: string; label: string; seconds: number; blocked: boolean }[]; other_seconds: number }>(
-      `/children/${child!.id}/analytics/app-usage?range=${range}`,
+    queryFn: withFixtureAlways(
+      () => api.get<{ items: { package: string; label: string; seconds: number; blocked: boolean }[]; other_seconds: number }>(
+        `/children/${child!.id}/analytics/app-usage?range=${range}`,
+      ),
+      () => fixtureAppUsage("live-neutral"),
     ),
     enabled: Boolean(child?.id),
   });

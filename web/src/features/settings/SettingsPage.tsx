@@ -11,6 +11,7 @@ import { ErrorState } from "@/components/ErrorState";
 import { PageHeader } from "@/components/PageHeader";
 import { SkeletonCard } from "@/components/Skeleton";
 import { api } from "@/lib/api";
+import { withFixtureAlways, FIXTURE_SETTINGS, FIXTURE_DEVICES } from "@/lib/fixture";
 import { formatDuration } from "@/lib/format";
 import { handleApiError } from "@/lib/handleApiError";
 import { useChild } from "@/app/childSelection";
@@ -56,7 +57,7 @@ const GRANT_LABELS: Record<string, string> = {
 function useChildSettings(childId: string | undefined) {
   return useQuery({
     queryKey: ["settings", childId],
-    queryFn: () => api.get<Settings>(`/children/${childId}/settings`),
+    queryFn: withFixtureAlways(() => api.get<Settings>(`/children/${childId}/settings`), () => FIXTURE_SETTINGS),
     enabled: Boolean(childId),
   });
 }
@@ -112,8 +113,8 @@ export function SettingsPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-secondary text-text-muted">
-              SenseHeaven uses explicit sessions (no all-day limit). Start one from the Overview or from the phone's
-              parent menu; each start lets you pick 15 m, 30 m, 1 h, 2 h or a custom length up to 8 h.
+              SenseHeaven uses explicit sessions (no all-day limit). Start one from the Overview or from the
+              parent menu on the phone; each start lets you pick 15 min, 30 min, 1 h, 2 h or a custom length up to 8 h.
             </p>
           </CardContent>
         </Card>
@@ -285,7 +286,7 @@ export function SettingsPage() {
       </div>
 
       <div
-        className={`sticky bottom-4 mt-6 transition-opacity ${
+        className={`mt-6 transition-opacity ${
           saveBarVisible ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       >
@@ -408,11 +409,11 @@ function Toggle({
         aria-checked={checked}
         aria-label={label}
         onClick={() => onChange(!checked)}
-        className={`relative h-6 w-11 shrink-0 rounded-pill transition-colors ${checked ? "bg-calm" : "bg-surface-2 border border-border"}`}
+        className={`relative h-11 w-[72px] shrink-0 rounded-pill transition-colors lg:h-6 lg:w-11 ${checked ? "bg-calm" : "bg-surface-2 border border-border"}`}
       >
         <span
           aria-hidden
-          className={`absolute top-0.5 h-5 w-5 rounded-pill bg-surface shadow transition-all ${checked ? "left-[22px]" : "left-0.5"}`}
+          className={`absolute top-3 h-5 w-5 rounded-pill bg-surface shadow transition-all lg:top-0.5 ${checked ? "left-[46px] lg:left-[22px]" : "left-3 lg:left-0.5"}`}
         />
       </button>
     </label>
@@ -455,7 +456,7 @@ function DeviceCard() {
   const { child } = useChild();
   const devices = useQuery({
     queryKey: ["devices", child?.id],
-    queryFn: () => api.get<DeviceRow[]>(`/children/${child!.id}/devices`),
+    queryFn: withFixtureAlways(() => api.get<DeviceRow[]>(`/children/${child!.id}/devices`), () => FIXTURE_DEVICES),
     enabled: Boolean(child?.id),
   });
   const [confirmRevoke, setConfirmRevoke] = useState<string | null>(null);

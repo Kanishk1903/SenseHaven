@@ -113,7 +113,7 @@ export function AccountPage() {
       </Card>
       <p className="mt-6 text-caption text-text-subtle">
         Need to remove everything? Deleting your child and their data lives in{" "}
-        <button type="button" className="underline" onClick={() => navigate("/")}>
+        <button type="button" className="inline-flex min-h-11 items-center px-1 underline lg:min-h-6" onClick={() => navigate("/")}>
           Settings → Privacy
         </button>
         .
