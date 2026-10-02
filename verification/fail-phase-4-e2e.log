@@ -1,0 +1,40 @@
+
+
+  1) e2e/overview.spec.ts:13:1 › login as the demo parent -> overview shows live status, KPIs and timeline 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByLabel(/Calm Index/)
+    Expected: visible
+    Error: strict mode violation: getByLabel(/Calm Index/) resolved to 2 elements:
+        1) <p aria-label="Calm Index" class="tnum text-h1 font-semibold">58</p> aka getByLabel('Calm Index', { exact: true })
+        2) <svg role="img" tabindex="0" class="w-full" viewBox="0 0 800 150" aria-label="Calm Index timeline for today">…</svg> aka getByRole('img', { name: 'Calm Index timeline for today' })
+
+    Call log:
+      - Expect "toBeVisible" getByLabel(/Calm Index/) with timeout 10000ms
+      - waiting for getByLabel(/Calm Index/)
+
+
+      15 |
+      16 |   await expect(page.getByRole("heading", { name: "Right now" })).toBeVisible();
+    > 17 |   await expect(page.getByLabel(/Calm Index/)).toBeVisible();
+         |                                               ^
+      18 |   await expect(page.getByText("Screen time today")).toBeVisible();
+      19 |   await expect(page.getByText("Calm timeline — today")).toBeVisible();
+      20 |   await expect(page.getByText("Top apps today")).toBeVisible();
+        at /Users/kanishkgupta/Desktop/aakhribaar_glm/web/e2e/overview.spec.ts:17:47
+
+    Error Context: test-results/overview-login-as-the-demo-4fcc3-ve-status-KPIs-and-timeline/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/overview-login-as-the-demo-4fcc3-ve-status-KPIs-and-timeline/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/overview-login-as-the-demo-4fcc3-ve-status-KPIs-and-timeline/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    e2e/overview.spec.ts:13:1 › login as the demo parent -> overview shows live status, KPIs and timeline 
+  1 did not run
+  4 passed (11.2s)

@@ -9,7 +9,10 @@
     "preview": "vite preview",
     "lint": "eslint . --max-warnings 0",
     "test": "vitest",
-    "types": "openapi-typescript ../contracts/openapi.json -o src/lib/api-types.ts"
+    "types": "openapi-typescript ../contracts/openapi.json -o src/lib/api-types.ts",
+    "tokens": "cp ../design/generated/tokens.css src/styles/tokens.css && cp ../design/generated/tailwind.tokens.cjs design/generated/tailwind.tokens.cjs && cp ../design/generated/Tokens.kt ../android/app/src/main/java/app/senseheaven/child/design/Tokens.kt",
+    "prebuild": "npm run tokens",
+    "predev": "npm run tokens"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.0.0",

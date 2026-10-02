@@ -14,7 +14,7 @@ test("login as the demo parent -> overview shows live status, KPIs and timeline"
   await login(page, DEMO_EMAIL, DEMO_PASSWORD);
 
   await expect(page.getByRole("heading", { name: "Right now" })).toBeVisible();
-  await expect(page.getByLabel(/Calm Index/)).toBeVisible();
+  await expect(page.getByLabel("Calm Index", { exact: true })).toBeVisible();
   await expect(page.getByText("Screen time today")).toBeVisible();
   await expect(page.getByText("Calm timeline — today")).toBeVisible();
   await expect(page.getByText("Top apps today")).toBeVisible();

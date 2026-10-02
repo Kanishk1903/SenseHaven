@@ -30,5 +30,6 @@ export async function login(page: Page, email: string, password: string) {
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: /Sign in/ }).click();
-  await expect(page.getByRole("heading", { name: /overview/i })).toBeVisible({ timeout: 15_000 });
+  // the redesigned overview greets "Hi {name}'s parent" — anchor on the nav link instead
+  await expect(page.getByRole("link", { name: "Overview" }).first()).toBeVisible({ timeout: 15_000 });
 }
