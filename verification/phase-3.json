@@ -1,6 +1,6 @@
 {
   "phase": 3,
-  "timestamp": "2026-10-02T19:23:28+00:00",
+  "timestamp": "2026-10-02T19:25:58+00:00",
   "checks": [
     {
       "name": "ml tests",
@@ -81,10 +81,10 @@
     {
       "name": "regression: previous gate",
       "cmd": "bash scripts/gate.sh 2",
-      "exit": 1,
-      "pass": false
+      "exit": 0,
+      "pass": true
     }
   ],
-  "verdict": "FAIL",
+  "verdict": "BLOCKED_ON_H3",
   "fallback_applied": false
 }

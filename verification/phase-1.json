@@ -1,6 +1,6 @@
 {
   "phase": 1,
-  "timestamp": "2026-10-02T19:23:48+00:00",
+  "timestamp": "2026-10-02T19:25:58+00:00",
   "checks": [
     {
       "name": "error codes",
@@ -17,8 +17,8 @@
     {
       "name": "tokens generated",
       "cmd": "python3 scripts/gen_tokens.py && python3 scripts/gen_tokens.py && git diff --exit-code -- design/generated && echo 'tokens deterministic: double re-run byte-identical'",
-      "exit": 1,
-      "pass": false
+      "exit": 0,
+      "pass": true
     },
     {
       "name": "contrast",
@@ -39,6 +39,6 @@
       "pass": true
     }
   ],
-  "verdict": "FAIL",
+  "verdict": "PASS",
   "fallback_applied": false
 }
