@@ -20,7 +20,7 @@ export function AuthLayout({ children, heading }: { children: React.ReactNode; h
       >
         <div className="absolute right-[-10%] top-[-15%] h-[520px] w-[520px] rounded-full bg-gradient-to-br from-calm-soft via-primary-soft to-surface-2" />
         <div className="relative space-y-4">
-          <OrbMark size={56} mood="calm" />
+          <OrbMark size={56} state="calm" />
           <p className="text-h2 font-semibold">Calm technology for families</p>
           <ul className="max-w-md space-y-2 text-secondary text-text-muted">
             <li>Screen time that adapts to how your child is doing — bonuses for calm stretches.</li>

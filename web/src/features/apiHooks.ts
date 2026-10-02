@@ -2,6 +2,22 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { api } from "@/lib/api";
+import { activeFixture, fixtureLive, fixtureOverview, fixtureTimeline, fixtureAppUsage,
+         fixtureSessions, fixtureAlerts } from "@/lib/fixture";
+
+
+// ---- Fixture harness (spec 7): dev/test-only, stripped from production builds ----
+
+/** Query function that serves fixture data when `?fixture=` is present (dev only).
+ *  `loading` never settles; `error` rejects. */
+function withFixture<T>(real: () => Promise<T>, fixtureData: () => T): () => Promise<T> {
+  const name = activeFixture();
+  if (!name) return real;
+  if (name === "loading") return () => new Promise<T>(() => {});
+  if (name === "error") return () => Promise.reject(new Error("Fixture error"));
+  return () => Promise.resolve(fixtureData());
+}
+
 
 export type LiveState = {
   state: "unpaired" | "offline" | "active" | "cooldown" | "locked";
@@ -73,7 +89,8 @@ export type AlertRow = {
 export function useLive(childId: string | undefined) {
   return useQuery({
     queryKey: ["live", childId],
-    queryFn: () => api.get<LiveState>(`/children/${childId}/live`),
+    queryFn: withFixture(() => api.get<LiveState>(`/children/${childId}/live`),
+                          () => fixtureLive(activeFixture() ?? "live-neutral")),
     enabled: Boolean(childId),
     refetchInterval: 5_000,
   });
@@ -82,7 +99,8 @@ export function useLive(childId: string | undefined) {
 export function useOverview(childId: string | undefined, range: string) {
   return useQuery({
     queryKey: ["overview", childId, range],
-    queryFn: () => api.get<Overview>(`/children/${childId}/analytics/overview?range=${range}`),
+    queryFn: withFixture(() => api.get<Overview>(`/children/${childId}/analytics/overview?range=${range}`),
+                          () => fixtureOverview(activeFixture() ?? "live-neutral")),
     enabled: Boolean(childId),
     refetchInterval: 15_000,
   });
@@ -91,7 +109,8 @@ export function useOverview(childId: string | undefined, range: string) {
 export function useTimeline(childId: string | undefined, date: string) {
   return useQuery({
     queryKey: ["timeline", childId, date],
-    queryFn: () => api.get<Timeline>(`/children/${childId}/analytics/emotion-timeline?date=${date}`),
+    queryFn: withFixture(() => api.get<Timeline>(`/children/${childId}/analytics/emotion-timeline?date=${date}`),
+                          () => fixtureTimeline(activeFixture() ?? "live-neutral")),
     enabled: Boolean(childId),
     refetchInterval: 15_000,
   });
@@ -100,7 +119,8 @@ export function useTimeline(childId: string | undefined, date: string) {
 export function useAppUsage(childId: string | undefined, range: string) {
   return useQuery({
     queryKey: ["appUsage", childId, range],
-    queryFn: () => api.get<AppUsage>(`/children/${childId}/analytics/app-usage?range=${range}`),
+    queryFn: withFixture(() => api.get<AppUsage>(`/children/${childId}/analytics/app-usage?range=${range}`),
+                          () => fixtureAppUsage(activeFixture() ?? "live-neutral")),
     enabled: Boolean(childId),
     refetchInterval: 15_000,
   });
@@ -109,7 +129,8 @@ export function useAppUsage(childId: string | undefined, range: string) {
 export function useSessions(childId: string | undefined, range: string) {
   return useQuery({
     queryKey: ["sessions", childId, range],
-    queryFn: () => api.get<SessionRow[]>(`/children/${childId}/analytics/sessions?range=${range}`),
+    queryFn: withFixture(() => api.get<SessionRow[]>(`/children/${childId}/analytics/sessions?range=${range}`),
+                          () => fixtureSessions(activeFixture() ?? "live-neutral")),
     enabled: Boolean(childId),
     refetchInterval: 15_000,
   });
@@ -118,7 +139,8 @@ export function useSessions(childId: string | undefined, range: string) {
 export function useAlerts() {
   return useQuery({
     queryKey: ["alerts"],
-    queryFn: () => api.get<AlertRow[]>("/alerts"),
+    queryFn: withFixture(() => api.get<AlertRow[]>("/alerts"),
+                          () => fixtureAlerts(activeFixture() ?? "live-neutral")),
     refetchInterval: 15_000,
   });
 }

@@ -1,28 +1,26 @@
 
-
-  1) e2e/overview.spec.ts:13:1 › login as the demo parent -> overview shows live status, KPIs and timeline 
+  3) e2e/overview.spec.ts:13:1 › login as the demo parent -> overview shows live status, KPIs and timeline 
 
     Error: expect(locator).toBeVisible() failed
 
-    Locator: getByLabel(/Calm Index/)
+    Locator: getByRole('heading', { name: 'Right now' })
     Expected: visible
-    Error: strict mode violation: getByLabel(/Calm Index/) resolved to 2 elements:
-        1) <p aria-label="Calm Index" class="tnum text-h1 font-semibold">58</p> aka getByLabel('Calm Index', { exact: true })
-        2) <svg role="img" tabindex="0" class="w-full" viewBox="0 0 800 150" aria-label="Calm Index timeline for today">…</svg> aka getByRole('img', { name: 'Calm Index timeline for today' })
+    Timeout: 10000ms
+    Error: element(s) not found
 
     Call log:
-      - Expect "toBeVisible" getByLabel(/Calm Index/) with timeout 10000ms
-      - waiting for getByLabel(/Calm Index/)
+      - Expect "toBeVisible" getByRole('heading', { name: 'Right now' }) with timeout 10000ms
+      - waiting for getByRole('heading', { name: 'Right now' })
 
 
+      14 |   await login(page, DEMO_EMAIL, DEMO_PASSWORD);
       15 |
-      16 |   await expect(page.getByRole("heading", { name: "Right now" })).toBeVisible();
-    > 17 |   await expect(page.getByLabel(/Calm Index/)).toBeVisible();
-         |                                               ^
+    > 16 |   await expect(page.getByRole("heading", { name: "Right now" })).toBeVisible();
+         |                                                                  ^
+      17 |   await expect(page.getByLabel("Calm Index", { exact: true })).toBeVisible();
       18 |   await expect(page.getByText("Screen time today")).toBeVisible();
       19 |   await expect(page.getByText("Calm timeline — today")).toBeVisible();
-      20 |   await expect(page.getByText("Top apps today")).toBeVisible();
-        at /Users/kanishkgupta/Desktop/aakhribaar_glm/web/e2e/overview.spec.ts:17:47
+        at /Users/kanishkgupta/Desktop/aakhribaar_glm/web/e2e/overview.spec.ts:16:66
 
     Error Context: test-results/overview-login-as-the-demo-4fcc3-ve-status-KPIs-and-timeline/error-context.md
 
@@ -34,7 +32,9 @@
 
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-  1 failed
+  3 failed
+    e2e/alerts.spec.ts:7:1 › alerts: unread badge -> open alerts -> mark all read -> badge clears ──
+    e2e/alerts.spec.ts:25:1 › axe: no critical or serious violations on alerts ─────────────────────
     e2e/overview.spec.ts:13:1 › login as the demo parent -> overview shows live status, KPIs and timeline 
   1 did not run
-  4 passed (11.2s)
+  2 passed (31.6s)

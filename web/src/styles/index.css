@@ -45,3 +45,68 @@
 :root[data-theme="dark"] svg[class*="illustration"] {
   filter: brightness(0.92);
 }
+
+/* The calm orb breathes only when calm; reduced motion strips it (spec 3.3) */
+@keyframes orb-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+.orb-breathe {
+  animation: orb-breathe 6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .orb-breathe { animation: none; }
+}
+
+/* Overview named-grid layout (spec 4.1) — never absolute positioning for flow content */
+.overview-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "now" "ribbon" "today" "feeds";
+  gap: 24px;
+}
+@media (min-width: 768px) {
+  .overview-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "now now"
+      "ribbon ribbon"
+      "today today"
+      "feeds feeds";
+  }
+}
+@media (min-width: 1180px) {
+  .overview-grid {
+    grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr);
+    grid-template-areas:
+      "now today"
+      "ribbon ribbon"
+      "feeds feeds";
+  }
+}
+.overview-grid > * { min-width: 0; }
+.area-now { grid-area: now; }
+.area-ribbon { grid-area: ribbon; }
+.area-today { grid-area: today; }
+.area-feeds { grid-area: feeds; }
+
+/* Today ledger with dotted leaders (spec 4.3) */
+.ledger-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 0;
+}
+.ledger-row .ledger-label { flex: none; }
+.ledger-row .ledger-rule {
+  flex: 1 1 auto;
+  border-bottom: 1px dotted var(--rule-strong);
+  transform: translateY(-4px);
+  min-width: 16px;
+}
+.ledger-row .ledger-value {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-display);
+  font-weight: 600;
+}

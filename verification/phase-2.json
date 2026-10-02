@@ -1,6 +1,6 @@
 {
   "phase": 2,
-  "timestamp": "2026-10-02T16:28:56+00:00",
+  "timestamp": "2026-10-02T19:23:27+00:00",
   "checks": [
     {
       "name": "tests",
@@ -53,10 +53,10 @@
     {
       "name": "regression: previous gate",
       "cmd": "bash scripts/gate.sh 1",
-      "exit": 0,
-      "pass": true
+      "exit": 1,
+      "pass": false
     }
   ],
-  "verdict": "PASS",
+  "verdict": "FAIL",
   "fallback_applied": false
 }

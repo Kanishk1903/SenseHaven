@@ -5,18 +5,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 object Tokens {
-    val Bg = Color(0xFFF5F6FA)
-    val Surface = Color(0xFFFFFFFF)
-    val Surface2 = Color(0xFFEEF0F6)
-    val Surface3 = Color(0xFFE6E9F2)
-    val Border = Color(0xFFE1E4EE)
-    val BorderStrong = Color(0xFFC9CEDD)
-    val Text = Color(0xFF14162A)
-    val TextMuted = Color(0xFF555A73)
-    val TextSubtle = Color(0xFF6A6F88)
-    val Primary = Color(0xFF3F4FE0)
-    val PrimaryHover = Color(0xFF3140C4)
-    val PrimarySoft = Color(0xFFE9ECFF)
+    val Bg = Color(0xFFF3F0E9)
+    val Surface = Color(0xFFFBF9F4)
+    val Surface2 = Color(0xFFECE8DF)
+    val Surface3 = Color(0xFFE3DED2)
+    val Border = Color(0xFFDDD8CB)
+    val BorderStrong = Color(0xFFBDB7A7)
+    val Text = Color(0xFF1A1916)
+    val TextMuted = Color(0xFF5B574D)
+    val TextSubtle = Color(0xFF61667E)
+    val Primary = Color(0xFF3B46D9)
+    val PrimaryHover = Color(0xFF2F3AC4)
+    val PrimarySoft = Color(0xFFEAECFF)
     val OnPrimary = Color(0xFFFFFFFF)
     val Calm = Color(0xFF1F9D74)
     val CalmFg = Color(0xFF14684D)
@@ -31,17 +31,16 @@ object Tokens {
     val InfoFg = Color(0xFF2B3BB3)
     val InfoSoft = Color(0xFFE9ECFF)
 
+    val RadiusChip = 4.dp
     val RadiusControl = 10.dp
-    val RadiusCard = 16.dp
-    val RadiusDialog = 20.dp
-    val RadiusHero = 24.dp
+    val RadiusPanel = 20.dp
     val RadiusPill = 999.dp
 
     val FocusRingWidth = 2.dp
     val FocusRingOffset = 2.dp
 
-    const val FONT_SANS = "Inter Variable"
-    const val FONT_DISPLAY = "Manrope Variable"
+    const val FONT_SANS = "Instrument Sans Variable"
+    const val FONT_DISPLAY = "Fraunces Variable"
     const val MOTION_FAST_MS = 120
     const val MOTION_BASE_MS = 200
     const val MOTION_SLOW_MS = 320

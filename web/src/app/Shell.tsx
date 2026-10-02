@@ -55,13 +55,14 @@ function ChildSwitcher() {
   );
 }
 
-const NAV_GROUPS: { label: string; items: { to: string; label: string; Icon: typeof Bell; end: boolean }[] }[] = [
+function navGroups(unread: number): { label: string; items: { to: string; label: string; Icon: typeof Bell; end: boolean }[] }[] {
+  return [
   {
     label: "Monitor",
     items: [
       { to: "/", label: "Overview", Icon: LayoutDashboard, end: true },
       { to: "__analytics__", label: "Analytics", Icon: LineChart, end: false },
-      { to: "/alerts", label: "Alerts", Icon: Bell, end: false },
+      { to: "/alerts", label: unread > 0 ? `Alerts (${unread} unread)` : "Alerts", Icon: Bell, end: false },
     ],
   },
   {
@@ -72,7 +73,8 @@ const NAV_GROUPS: { label: string; items: { to: string; label: string; Icon: typ
       { to: "/account", label: "Account", Icon: UserRound, end: false },
     ],
   },
-];
+  ];
+}
 
 function NavLinks({
   onNavigate,
@@ -82,9 +84,10 @@ function NavLinks({
   collapsed?: boolean;
 }) {
   const { child } = useChild();
+  const unread = useUnreadAlerts().unread;
   return (
     <nav aria-label="Main" className="space-y-3">
-      {NAV_GROUPS.map((group) => (
+      {navGroups(unread).map((group) => (
         <div key={group.label}>
           {!collapsed ? (
             <p className="mb-1 px-3 text-caption font-medium text-text-subtle">{group.label}</p>
@@ -108,7 +111,7 @@ function NavLinks({
                   aria-current="page"
                   className={({ isActive }) =>
                     cn(
-                      "flex items-center gap-3 rounded-control px-3 py-2 text-secondary font-medium",
+                      "relative flex items-center gap-3 rounded-control px-3 py-2 text-secondary font-medium",
                       collapsed && "justify-center px-0",
                       isActive
                         ? "bg-primary-soft text-primary shadow-[inset_3px_0_0_var(--primary)]"
@@ -117,7 +120,23 @@ function NavLinks({
                   }
                 >
                   <item.Icon size={18} aria-hidden />
-                  {!collapsed ? item.label : <span className="sr-only">{item.label}</span>}
+                  {!collapsed ? (
+                    <>
+                      {item.label}
+                      {item.label.startsWith("Alerts") && unread > 0 ? (
+                        <span className="tnum ml-auto rounded-pill bg-stress px-1.5 text-[10px] font-semibold text-on-primary">
+                          {unread}
+                        </span>
+                      ) : null}
+                    </>
+                  ) : (
+                    <>
+                      <span className="sr-only">{item.label}</span>
+                      {item.label.startsWith("Alerts") && unread > 0 ? (
+                        <span aria-hidden className="absolute right-1 top-1 h-2 w-2 rounded-pill bg-stress" />
+                      ) : null}
+                    </>
+                  )}
                 </NavLink>
               );
             })}
@@ -208,20 +227,8 @@ export function Shell() {
                 <PanelLeft size={16} aria-hidden />
               </button>
             </div>
-            <div className={cn("mb-4 flex items-center px-1", collapsed ? "justify-center" : "justify-between")}>
-              {!collapsed ? <ChildSwitcher /> : null}
-              <Link
-                to="/alerts"
-                aria-label={unread > 0 ? `${unread} unread alerts` : "Alerts"}
-                className="relative rounded-control p-2 text-text-muted hover:bg-surface-2 hover:text-text"
-              >
-                <Bell size={18} aria-hidden />
-                {unread > 0 ? (
-                  <span className="tnum absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-pill bg-stress px-1 text-[10px] font-semibold text-on-primary">
-                    {unread}
-                  </span>
-                ) : null}
-              </Link>
+            <div className="mb-4 px-1">
+              <ChildSwitcher />
             </div>
             <NavLinks collapsed={collapsed} />
           </div>

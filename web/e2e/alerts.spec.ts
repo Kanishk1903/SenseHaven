@@ -2,22 +2,23 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { DEMO_EMAIL, DEMO_PASSWORD, failOnConsoleErrors, login } from "./helpers";
 
-const unreadBell = (page: Page) => page.getByRole("link", { name: /unread alerts/ }).first();
+// D13: the unread count lives on the Alerts nav item ("Alerts (2 unread)"), not a standalone bell
+const alertsNavUnread = (page: Page) => page.getByRole("link", { name: /Alerts \(\d+ unread\)/ }).first();
 
 test("alerts: unread badge -> open alerts -> mark all read -> badge clears", async ({ page }) => {
   const assertClean = failOnConsoleErrors(page);
   await login(page, DEMO_EMAIL, DEMO_PASSWORD);
 
-  // unread alerts exist in the seeded demo data (mobile header + desktop sidebar bells)
-  await expect(unreadBell(page)).toBeVisible();
+  // unread alerts exist in the seeded demo data
+  await expect(alertsNavUnread(page)).toBeVisible();
 
-  await unreadBell(page).click();
+  await alertsNavUnread(page).click();
   await expect(page.getByRole("heading", { name: "Alerts" })).toBeVisible();
   await expect(page.getByText("New").first()).toBeVisible();
 
   await page.getByRole("button", { name: /Mark all read/ }).click();
-  await expect(page.getByRole("link", { name: "Alerts" }).first()).toBeVisible();
-  await expect(page.getByRole("link", { name: /unread alerts/ })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Alerts", exact: true }).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: /Alerts \(\d+ unread\)/ })).toHaveCount(0);
 
   assertClean();
 });

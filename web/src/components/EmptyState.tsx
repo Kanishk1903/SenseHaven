@@ -10,7 +10,7 @@ type Props = {
 export function EmptyState({ title, body, action }: Props) {
   return (
     <div className="flex max-w-sm flex-col items-center gap-4 text-center">
-      <OrbMark size={72} mood="calm" />
+      <OrbMark size={72} state="calm" />
       <div>
         <h1 className="text-h3 font-semibold">{title}</h1>
         <p className="mt-1 text-secondary text-text-muted">{body}</p>

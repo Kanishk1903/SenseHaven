@@ -69,7 +69,7 @@ describe("presentational components (P4.7)", () => {
   it("OrbMark renders a calm mood gradient by default and changes with mood", () => {
     const { container } = render(<OrbMark size={40} />);
     expect(container.querySelector("radialGradient")).not.toBeNull();
-    const { container: stressContainer } = render(<OrbMark size={40} mood="stress" />);
+    const { container: stressContainer } = render(<OrbMark size={40} state="stressed" />);
     expect(stressContainer.querySelector("radialGradient")).not.toBeNull();
   });
 

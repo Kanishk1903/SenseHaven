@@ -10,14 +10,23 @@ test.beforeEach(({ page }) => {
   assertClean = failOnConsoleErrors(page);
 });
 
-test("login as the demo parent -> overview shows live status, KPIs and timeline", async ({ page }) => {
+test("login as the demo parent -> overview shows status sentence, ledger and ribbon", async ({ page }) => {
   await login(page, DEMO_EMAIL, DEMO_PASSWORD);
 
-  await expect(page.getByRole("heading", { name: "Right now" })).toBeVisible();
-  await expect(page.getByLabel("Calm Index", { exact: true })).toBeVisible();
-  await expect(page.getByText("Screen time today")).toBeVisible();
-  await expect(page.getByText("Calm timeline — today")).toBeVisible();
-  await expect(page.getByText("Top apps today")).toBeVisible();
+  await expect(page.getByTestId("overview-ready")).toBeVisible();
+
+  // v2: the h1 is a status sentence naming the child, not a greeting
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Aarav");
+
+  // Now panel: ring timer with the calm estimate beside it
+  await expect(page.getByRole("timer")).toBeVisible();
+  await expect(page.getByText("estimated from facial expressions")).toBeVisible();
+
+  // Today ledger, day ribbon and top apps sections
+  await expect(page.getByRole("region", { name: "Today in numbers" })).toBeVisible();
+  await expect(page.getByText("Screen time", { exact: true })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Calm Index ribbon for today" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Top apps today" })).toBeVisible();
   assertClean();
 });
 

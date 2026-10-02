@@ -31,11 +31,13 @@ COLOR_KEYS = [
 ]
 
 # Type roles in output order (display face roles first).
-TYPE_ROLES = ("display", "numeral-xl", "h1", "h2", "h3", "body", "body-strong", "secondary", "caption")
+TYPE_ROLES = ("display", "numeral-xl", "h1", "h2", "h3", "body", "body-strong", "secondary", "caption", "mono")
 DISPLAY_ROLES = {"display", "numeral-xl", "h1", "h2"}
 NUMERAL_ROLES = {"numeral-xl"}
+MONO_ROLES = {"mono"}
+DISPLAY_ROLES = {"display", "numeral-xl", "h1", "h2"}
 
-RADIUS_KEYS = ("control", "card", "dialog", "hero", "pill")
+RADIUS_KEYS = ("chip", "control", "panel", "pill")
 
 
 def pascal(name: str) -> str:
@@ -63,10 +65,11 @@ def main() -> int:
     css.append("  /* type */")
     css.append(f'  --font-sans: "{t["font-sans"]}", system-ui, sans-serif;')
     css.append(f'  --font-display: "{t["font-display"]}", var(--font-sans);')
+    css.append(f'  --font-mono: "{t["font-mono"]}", ui-monospace, monospace;')
     for role in TYPE_ROLES:
         spec = t[role]
-        family = "display" if role in DISPLAY_ROLES else "sans"
-        tnum = " tnum" if role in NUMERAL_ROLES else ""
+        family = "mono" if role in MONO_ROLES else ("display" if role in DISPLAY_ROLES else "sans")
+        tnum = " tnum" if role in NUMERAL_ROLES or role in MONO_ROLES else ""
         css.append(
             f"  --type-{role}: {spec['size']}/{spec['line-height']} var(--font-{family})"
             f"{tnum} {spec['weight']};"
@@ -114,8 +117,8 @@ def main() -> int:
     js.append("  fontSize: {")
     for role in TYPE_ROLES:
         spec = t[role]
-        family = "display" if role in DISPLAY_ROLES else "sans"
-        tnum = '"fontVariantNumeric": "tabular-nums",' if role in NUMERAL_ROLES else ""
+        family = "mono" if role in MONO_ROLES else ("display" if role in DISPLAY_ROLES else "sans")
+        tnum = '"fontVariantNumeric": "tabular-nums",' if role in NUMERAL_ROLES or role in MONO_ROLES else ""
         js.append(
             f"    '{role}': ['var(--type-{role})', {{ 'fontFamily': 'var(--font-{family})',"
             f" 'letterSpacing': '{spec['tracking']}', {tnum} 'fontWeight': '{spec['weight']}' }}],"
