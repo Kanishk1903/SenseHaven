@@ -15,10 +15,10 @@ const buttonVariants = cva(
         danger: "bg-stress text-on-primary hover:opacity-90",
       },
       size: {
-        sm: "h-8 px-3 text-secondary",
-        md: "h-10 px-4 text-body",
+        sm: "h-11 px-3 text-secondary lg:h-8",
+        md: "h-11 px-4 text-body lg:h-10",
         lg: "h-11 px-6 text-body",
-        icon: "h-10 w-10",
+        icon: "h-11 w-11 lg:h-10 lg:w-10",
       },
     },
     defaultVariants: { variant: "primary", size: "md" },

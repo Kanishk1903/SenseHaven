@@ -6,8 +6,7 @@
 
 @layer base {
   html {
-    font-family: "Inter Variable", system-ui, sans-serif;
-    font-feature-settings: "cv11", "ss01";
+    font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
   body {
@@ -22,6 +21,14 @@
   .tnum {
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum";
+  }
+  /* anti-breakage contract (v2 spec 5): numerals, chips and labels never wrap */
+  [data-nowrap] {
+    white-space: nowrap;
+  }
+  /* prose breaks long words (40-char names, long app names) instead of overflowing */
+  h1, h2, h3, h4, p, li {
+    overflow-wrap: break-word;
   }
   ::placeholder {
     color: var(--text-subtle);
@@ -97,7 +104,7 @@
   gap: 8px;
   padding: 6px 0;
 }
-.ledger-row .ledger-label { flex: none; }
+.ledger-row .ledger-label { flex: 0 1 auto; min-width: 0; }
 .ledger-row .ledger-rule {
   flex: 1 1 auto;
   border-bottom: 1px dotted var(--rule-strong);
@@ -105,7 +112,7 @@
   min-width: 16px;
 }
 .ledger-row .ledger-value {
-  flex: none;
+  flex: 0 1 auto;
   font-variant-numeric: tabular-nums;
   font-family: var(--font-display);
   font-weight: 600;

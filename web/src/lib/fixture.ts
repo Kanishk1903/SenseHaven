@@ -1,8 +1,10 @@
 /** Fixture harness (spec 7): dev/test-only mock layer behind `?fixture=<name>`.
- *  Tree-shaken from production builds (guarded by import.meta.env.DEV).
+ *  Inactive in normal production builds; also enabled in a minified verification build
+ *  via VITE_FIXTURES=1 so the matrix and Lighthouse audit the real optimized bundle.
  *  Fixtures use the real values from the BEFORE screenshot for `offline`. */
+import type { QueryClient } from "@tanstack/react-query";
 import type { LiveState, Overview, Timeline, SessionRow, AlertRow, AppUsage } from "@/features/apiHooks";
-import type { Child } from "@/lib/queries";
+import type { Child, Parent } from "@/lib/queries";
 
 export const FIXTURE_NAMES = [
   "live-calm", "live-neutral", "live-stressed", "session-ending", "offline", "stale",
@@ -14,9 +16,41 @@ export type FixtureName = (typeof FIXTURE_NAMES)[number];
 export const FIXTURE_NOW = "2026-10-02T17:40:00.000Z"; // 23:10 IST
 
 export function activeFixture(): FixtureName | null {
-  if (!import.meta.env.DEV) return null;
+  if (!import.meta.env.DEV && import.meta.env.VITE_FIXTURES !== "1") return null;
   const v = new URLSearchParams(window.location.search).get("fixture");
   return (FIXTURE_NAMES as readonly string[]).includes(v ?? "") ? (v as FixtureName) : null;
+}
+
+/** Query function wrapper: serves fixture data when `?fixture=` is present.
+ *  `loading` never settles; `error` rejects; everything else resolves immediately. */
+export function withFixture<T>(real: () => Promise<T>, fixtureData: () => T): () => Promise<T> {
+  const name = activeFixture();
+  if (!name) return real;
+  if (name === "loading") return () => new Promise<T>(() => {});
+  if (name === "error") return () => Promise.reject(new Error("Fixture error"));
+  return () => Promise.resolve(fixtureData());
+}
+
+/** Auth must never hang or reject under fixtures: it is infrastructure, not page state. */
+export function withFixtureAlways<T>(real: () => Promise<T>, fixtureData: () => T): () => Promise<T> {
+  if (!activeFixture()) return real;
+  return () => Promise.resolve(fixtureData());
+}
+
+export const FIXTURE_PARENT: Parent = {
+  id: "fixture-parent",
+  email: "fixture@senseheaven.app",
+  display_name: "Fixture Parent",
+  timezone: "Asia/Kolkata",
+  has_pin: true,
+  created_at: "2026-09-01T10:00:00Z",
+};
+
+/** CLS check (G7) simulates a poll refresh by invalidating every query. */
+export function installFixtureGlobals(queryClient: QueryClient): void {
+  (window as unknown as Record<string, unknown>).__shRefetch = () => {
+    void queryClient.invalidateQueries();
+  };
 }
 
 const child = (name: string): Child => ({
@@ -81,7 +115,7 @@ const baseAlerts: AlertRow[] = [
   { id: "al-1", child_id: CHILD.id, kind: "stress_alert", severity: "warning",
     title: "Aarav had a stressful stretch — a 5-minute breather was started",
     body: "SenseHeaven noticed a long run of stress signals and started a breather.",
-    payload: null, created_at: "2026-10-02T17:35:00+05:30", read_at: null },
+    payload: null, created_at: "2026-10-02T23:35:00+05:30", read_at: null },
 ];
 
 export function fixtureChildren(name: FixtureName): Child[] {
@@ -108,20 +142,21 @@ export function fixtureLive(name: FixtureName): LiveState {
     case "offline":
       live.state = "offline";
       live.device!.stale = true;
-      live.device!.last_seen_at = "2026-10-02T17:31:32+05:30"; // 488 s before frozen now
-      live.calm_index = { value: 58, label: "neutral", ts: "2026-10-02T17:30:00+05:30" };
+      live.device!.last_seen_at = "2026-10-02T23:01:52+05:30"; // 488 s before frozen now (23:10 IST)
+      live.calm_index = { value: 58, label: "neutral", ts: "2026-10-02T23:00:00+05:30" };
       break;
     case "stale":
       live.device!.stale = true;
-      live.device!.last_seen_at = "2026-10-02T17:25:00+05:30";
+      live.device!.last_seen_at = "2026-10-02T22:55:00+05:30"; // 15 min before frozen now
       live.state = "offline";
       break;
     case "locked":
+      // the API returns state "locked" with a live session when the parent locks mid-session
       live.state = "locked";
-      live.session = null;
-      live.remaining_s = null;
+      live.session!.status = "locked";
       break;
     case "no-session":
+      // device fresh, no session running — the API's shape for "locked" with session === null
       live.state = "locked";
       live.session = null;
       live.remaining_s = null;

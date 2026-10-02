@@ -263,7 +263,7 @@ function SessionsTab() {
             <ul className="space-y-1.5 text-secondary">
               {(rows.find((row) => row.id === expanded)?.ledger ?? []).map((entry) => (
                 <li key={`${entry.ts}-${entry.kind}`} className="flex items-baseline justify-between gap-3">
-                  <span>
+                  <span className="font-mono" data-nowrap>
                     {new Date(entry.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}{" "}
                     <span className="font-medium">{entry.kind.replace(/_/g, " ")}</span>
                     {entry.reason ? ` — ${entry.reason}` : ""}

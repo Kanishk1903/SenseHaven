@@ -19,7 +19,7 @@ export function Kpi({
   return (
     <div className={cn("rounded-card border border-border bg-surface p-4", className)}>
       <p className="text-secondary text-text-subtle">{label}</p>
-      <p className="tnum mt-1 font-display text-[28px] font-bold leading-9" aria-label={label}>
+      <p className="tnum mt-1 font-display text-[1.75rem] font-bold leading-9" aria-label={label}>
         {value}
       </p>
       <div className="mt-1 flex items-center gap-1.5 text-caption">

@@ -55,6 +55,10 @@ def main() -> int:
     font_sans = t["font-sans"]
     font_display = t["font-display"]
 
+    def px_to_rem(value: str) -> str:
+        """Type sizes in rem so 200% root text zoom scales the whole scale (v2 spec G11)."""
+        return f"{float(value.rstrip('px')) / 16:g}rem"
+
     # ---- tokens.css: :root (light) + [data-theme=dark] --------------------
     css = [f"/* {HEADER} */"]
 
@@ -70,10 +74,8 @@ def main() -> int:
         spec = t[role]
         family = "mono" if role in MONO_ROLES else ("display" if role in DISPLAY_ROLES else "sans")
         tnum = " tnum" if role in NUMERAL_ROLES or role in MONO_ROLES else ""
-        css.append(
-            f"  --type-{role}: {spec['size']}/{spec['line-height']} var(--font-{family})"
-            f"{tnum} {spec['weight']};"
-        )
+        css.append(f"  --type-{role}-size: {px_to_rem(spec['size'])};")
+        css.append(f"  --type-{role}-lh: {px_to_rem(spec['line-height'])};")
         css.append(f"  --type-{role}-tracking: {spec['tracking']};")
     css.append("  /* radii */")
     for key in RADIUS_KEYS:
@@ -113,6 +115,7 @@ def main() -> int:
     js.append("  fontFamily: {")
     js.append("    sans: ['" + chr(34) + font_sans + chr(34) + "', 'system-ui', 'sans-serif'],")
     js.append("    display: ['" + chr(34) + font_display + chr(34) + "', '" + chr(34) + font_sans + chr(34) + "'],")
+    js.append("    mono: ['" + chr(34) + t["font-mono"] + chr(34) + "', 'ui-monospace', 'monospace'],")
     js.append("  },")
     js.append("  fontSize: {")
     for role in TYPE_ROLES:
@@ -120,7 +123,8 @@ def main() -> int:
         family = "mono" if role in MONO_ROLES else ("display" if role in DISPLAY_ROLES else "sans")
         tnum = '"fontVariantNumeric": "tabular-nums",' if role in NUMERAL_ROLES or role in MONO_ROLES else ""
         js.append(
-            f"    '{role}': ['var(--type-{role})', {{ 'fontFamily': 'var(--font-{family})',"
+            f"    '{role}': ['var(--type-{role}-size)', {{ 'lineHeight': 'var(--type-{role}-lh)',"
+            f" 'fontFamily': 'var(--font-{family})',"
             f" 'letterSpacing': '{spec['tracking']}', {tnum} 'fontWeight': '{spec['weight']}' }}],"
         )
     js.append("  },")

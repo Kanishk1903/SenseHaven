@@ -2,6 +2,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { api } from "./api";
+import { activeFixture, withFixtureAlways, fixtureChildren, FIXTURE_PARENT } from "./fixture";
 
 export type Parent = {
   id: string;
@@ -24,7 +25,7 @@ export type Child = {
 export function useMe() {
   return useQuery({
     queryKey: ["me"],
-    queryFn: () => api.get<Parent>("/auth/me"),
+    queryFn: withFixtureAlways(() => api.get<Parent>("/auth/me"), () => FIXTURE_PARENT),
     retry: false,
     staleTime: 60_000,
   });
@@ -33,7 +34,10 @@ export function useMe() {
 export function useChildren() {
   return useQuery({
     queryKey: ["children"],
-    queryFn: () => api.get<Child[]>("/children"),
+    queryFn: withFixtureAlways(
+      () => api.get<Child[]>("/children"),
+      () => fixtureChildren(activeFixture() ?? "live-neutral"),
+    ),
     staleTime: 30_000,
   });
 }

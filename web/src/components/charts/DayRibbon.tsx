@@ -132,7 +132,7 @@ export function DayRibbon({
             type="button"
             aria-pressed={!fullDay}
             onClick={() => setFullDay(false)}
-            className={cn("rounded-[7px] px-2 py-0.5", !fullDay ? "bg-surface text-text shadow-elev1" : "text-text-muted")}
+            className={cn("inline-flex min-h-11 items-center rounded-[7px] px-3 lg:min-h-6", !fullDay ? "bg-surface text-text shadow-elev1" : "text-text-muted")}
           >
             Active hours
           </button>
@@ -140,13 +140,15 @@ export function DayRibbon({
             type="button"
             aria-pressed={fullDay}
             onClick={() => setFullDay(true)}
-            className={cn("rounded-[7px] px-2 py-0.5", fullDay ? "bg-surface text-text shadow-elev1" : "text-text-muted")}
+            className={cn("inline-flex min-h-11 items-center rounded-[7px] px-3 lg:min-h-6", fullDay ? "bg-surface text-text shadow-elev1" : "text-text-muted")}
           >
             Full day
           </button>
         </div>
       </div>
 
+      {/* markers are HTML hotspots over the strip (absolute allowed for markers, spec 5.1) */}
+      <div className="relative w-full">
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="w-full"
@@ -180,26 +182,18 @@ export function DayRibbon({
         {/* rim */}
         <rect x={PAD_X} y={0.5} width={W - 2 * PAD_X} height={STRIP_H} rx={4} fill="none" stroke="var(--rule)" />
 
-        {/* stress episode flags */}
+        {/* stress episode flags (decorative; the HTML hotspots carry semantics) */}
         {episodes.map((marker) => {
           const m = minuteOfDay(marker.t);
           if (m < domain.min || m > domain.max) return null;
-          return (
-            <g key={marker.t} tabIndex={0} aria-label={marker.label}>
-              <path d={`M${x(m) - 3},${STRIP_H} l3,-6 3,6 z`} fill="var(--stress)" />
-            </g>
-          );
+          return <path key={marker.t} d={`M${x(m) - 3},${STRIP_H} l3,-6 3,6 z`} fill="var(--stress)" aria-hidden />;
         })}
 
-        {/* breather markers (focusable circles) */}
+        {/* breather markers (decorative) */}
         {breathers.map((marker) => {
           const m = minuteOfDay(marker.t);
           if (m < domain.min || m > domain.max) return null;
-          return (
-            <g key={marker.t} tabIndex={0} aria-label={marker.label}>
-              <circle cx={x(m)} cy={STRIP_H - 8} r={4} fill="var(--surface)" stroke="var(--stress)" strokeWidth="1.5" />
-            </g>
-          );
+          return <circle key={marker.t} cx={x(m)} cy={STRIP_H - 8} r={4} fill="var(--surface)" stroke="var(--stress)" strokeWidth="1.5" aria-hidden />;
         })}
 
         {/* session brackets */}
@@ -239,12 +233,27 @@ export function DayRibbon({
         {ticks.map((m) => (
           <g key={m}>
             <line x1={x(m)} y1={STRIP_H + BRACKET_H} x2={x(m)} y2={STRIP_H + BRACKET_H + 4} stroke="var(--rule-strong)" />
-            <text x={x(m)} y={STRIP_H + BRACKET_H + 16} textAnchor="middle" fontSize="12" fill="var(--text-subtle)" className="tnum">
+            <text x={x(m)} y={STRIP_H + BRACKET_H + 16} textAnchor="middle" fontSize="12" fill="var(--text-subtle)" className="tnum font-mono">
               {fmtTick(m)}
             </text>
           </g>
         ))}
       </svg>
+      {[...episodes, ...breathers].map((marker) => {
+        const m = minuteOfDay(marker.t);
+        if (m < domain.min || m > domain.max) return null;
+        return (
+          <button
+            key={marker.t}
+            type="button"
+            aria-label={marker.label}
+            title={marker.label}
+            className="absolute top-0 h-full w-11 -translate-x-1/2 rounded-control hover:bg-surface-3/40"
+            style={{ left: `${(x(m) / W) * 100}%` }}
+          />
+        );
+      })}
+      </div>
     </section>
   );
 }

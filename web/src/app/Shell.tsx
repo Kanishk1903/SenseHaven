@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import { Bell, Download, LayoutDashboard, LineChart, LogOut, Menu, PanelLeft, Settings, ShieldCheck, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, NavLink, Navigate, Outlet, useNavigate } from "react-router-dom";
@@ -6,19 +5,13 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { OrbMark } from "@/components/OrbMark";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { api } from "@/lib/api";
+import { useAlerts } from "@/features/apiHooks";
 import { useChildren, useLogout, useMe } from "@/lib/queries";
 import { cn } from "@/lib/cn";
 import { ChildSelectionProvider, useChild } from "./childSelection";
 
-type AlertRow = { id: string; read_at: string | null };
-
 function useUnreadAlerts() {
-  const query = useQuery({
-    queryKey: ["alerts"],
-    queryFn: () => api.get<AlertRow[]>("/alerts"),
-    refetchInterval: 15_000,
-  });
+  const query = useAlerts();
   const unread = query.data?.filter((alert) => alert.read_at === null).length ?? 0;
   useEffect(() => {
     document.title = unread > 0 ? `(${unread}) SenseHeaven` : "SenseHeaven";
@@ -41,7 +34,7 @@ function ChildSwitcher() {
     <label className="text-secondary">
       <span className="sr-only">Selected child</span>
       <select
-        className="rounded-control border border-border bg-surface px-2 py-1.5 text-secondary"
+        className="min-h-11 rounded-control border border-border bg-surface px-2 py-1.5 text-secondary"
         value={child.id}
         onChange={(event) => select(event.target.value)}
       >
@@ -90,7 +83,7 @@ function NavLinks({
       {navGroups(unread).map((group) => (
         <div key={group.label}>
           {!collapsed ? (
-            <p className="mb-1 px-3 text-caption font-medium text-text-subtle">{group.label}</p>
+            <p className="mb-1 hidden px-3 text-caption font-medium text-text-subtle lg:block">{group.label}</p>
           ) : (
             <div aria-hidden className="mx-3 mb-2 border-t border-border" />
           )}
@@ -111,7 +104,7 @@ function NavLinks({
                   aria-current="page"
                   className={({ isActive }) =>
                     cn(
-                      "relative flex items-center gap-3 rounded-control px-3 py-2 text-secondary font-medium",
+                      "relative flex min-h-11 min-w-11 items-center gap-3 rounded-control px-3 py-2 text-secondary font-medium",
                       collapsed && "justify-center px-0",
                       isActive
                         ? "bg-primary-soft text-primary shadow-[inset_3px_0_0_var(--primary)]"
@@ -122,9 +115,10 @@ function NavLinks({
                   <item.Icon size={18} aria-hidden />
                   {!collapsed ? (
                     <>
-                      {item.label}
+                      <span className="hidden lg:inline">{item.label}</span>
+                      <span className="sr-only lg:hidden">{item.label}</span>
                       {item.label.startsWith("Alerts") && unread > 0 ? (
-                        <span className="tnum ml-auto rounded-pill bg-stress px-1.5 text-[10px] font-semibold text-on-primary">
+                        <span className="tnum ml-auto rounded-pill bg-stress px-1.5 text-[12px] leading-none font-semibold text-on-primary">
                           {unread}
                         </span>
                       ) : null}
@@ -162,34 +156,35 @@ export function Shell() {
 
   return (
     <ChildSelectionProvider>
-      <div className="min-h-screen bg-bg pb-16 md:pb-0">
+      <div className="min-h-screen bg-bg">
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded-control focus:bg-surface focus:px-3 focus:py-2"
       >
         Skip to content
       </a>
-      <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-surface px-4 lg:hidden">
+      <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-surface px-[clamp(8px,2.5vw,1rem)] lg:hidden">
         <button
           type="button"
           aria-label={menuOpen ? "Close menu" : "Open menu"}
           aria-expanded={menuOpen}
           onClick={() => setMenuOpen((value) => !value)}
-          className="rounded-control p-2 hover:bg-surface-2"
+          className="flex h-11 w-11 items-center justify-center rounded-control hover:bg-surface-2"
         >
           <Menu size={20} aria-hidden />
         </button>
-        <span className="flex items-center gap-2 font-semibold">
-          <OrbMark size={22} /> SenseHeaven
+        <span className="flex min-w-0 items-center gap-2 font-semibold">
+          <OrbMark size={22} />
+          <span className="truncate" title="SenseHeaven" data-allow-truncate>SenseHeaven</span>
         </span>
         <Link
           to="/alerts"
           aria-label={unread > 0 ? `${unread} unread alerts` : "Alerts"}
-          className="relative rounded-control p-2 hover:bg-surface-2"
+          className="relative flex h-11 w-11 items-center justify-center rounded-control hover:bg-surface-2"
         >
           <Bell size={20} aria-hidden />
           {unread > 0 ? (
-            <span className="tnum absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-pill bg-stress px-1 text-[10px] font-semibold text-on-primary">
+            <span className="tnum absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-pill bg-stress px-1 text-[12px] leading-none font-semibold text-on-primary">
               {unread}
             </span>
           ) : null}
@@ -213,16 +208,17 @@ export function Shell() {
           )}
         >
           <div>
-            <div className="mb-4 flex items-center justify-between">
-              <Link to="/" className="flex items-center gap-2 px-2 py-1 font-semibold">
+            <div className="mb-4 flex flex-col items-center gap-1 lg:flex-row lg:justify-between">
+              <Link to="/" className="flex min-h-11 w-11 items-center justify-center gap-2 px-2 py-1 font-semibold lg:min-h-9 lg:w-auto">
                 <OrbMark size={24} />
-                {!collapsed ? "SenseHeaven" : <span className="sr-only">SenseHeaven</span>}
+                <span className="sr-only lg:hidden">SenseHeaven</span>
+                <span className={cn("hidden lg:inline", collapsed && "sr-only")}>SenseHeaven</span>
               </Link>
               <button
                 type="button"
                 aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
                 onClick={() => setCollapsed((value) => !value)}
-                className="hidden rounded-control p-1.5 text-text-muted hover:bg-surface-2 hover:text-text md:block"
+                className="hidden h-11 w-11 items-center justify-center rounded-control text-text-muted hover:bg-surface-2 hover:text-text md:flex lg:h-7 lg:w-7"
               >
                 <PanelLeft size={16} aria-hidden />
               </button>
@@ -232,11 +228,13 @@ export function Shell() {
             </div>
             <NavLinks collapsed={collapsed} />
           </div>
-          <div className="flex items-center justify-between gap-2 border-t border-border pt-3">
-            <span className="truncate px-1 text-caption text-text-subtle" title={me?.email}>
+          <div className="flex flex-col items-center gap-2 border-t border-border pt-3 lg:flex-row lg:justify-between">
+            <span className="sr-only truncate px-1 text-caption text-text-subtle lg:not-sr-only" title={me?.email} data-allow-truncate>
               {me?.display_name}
             </span>
-            <ThemeToggle />
+            <div className="hidden lg:block">
+              <ThemeToggle />
+            </div>
             <Button
               variant="ghost"
               size="icon"
@@ -252,37 +250,10 @@ export function Shell() {
           </div>
         </aside>
 
-        <main id="main" className="min-w-0 flex-1 p-4 lg:p-8">
+        <main id="main" className="min-w-0 flex-1 px-[clamp(8px,2.5vw,2rem)] py-4 lg:px-8 lg:py-8">
           <Outlet />
         </main>
       </div>
-
-      <nav
-        aria-label="Primary"
-        className="fixed inset-x-0 bottom-0 z-30 flex h-16 items-stretch border-t border-border bg-surface md:hidden"
-      >
-        {[
-          { to: "/", label: "Overview", Icon: LayoutDashboard },
-          { to: "__analytics__", label: "Analytics", Icon: LineChart },
-          { to: "/alerts", label: "Alerts", Icon: Bell },
-          { to: "__settings__", label: "Settings", Icon: Settings },
-        ].map((tab) => (
-          <NavLink
-            key={tab.to}
-            to={tab.to}
-            end={tab.to === "/"}
-            className={({ isActive }) =>
-              cn(
-                "flex flex-1 flex-col items-center justify-center gap-0.5 text-caption",
-                isActive ? "text-primary" : "text-text-muted",
-              )
-            }
-          >
-            <tab.Icon size={20} aria-hidden />
-            {tab.label}
-          </NavLink>
-        ))}
-      </nav>
 
       <footer className="px-4 pb-6 pt-2 text-center text-caption text-text-subtle lg:px-8">
         <span className="inline-flex items-center gap-1">

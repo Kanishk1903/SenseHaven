@@ -6,12 +6,12 @@ import { passwordStrength } from "@/features/auth/passwordStrength";
 import { detectTimezone } from "@/lib/queries";
 
 describe("copy + formatting helpers (P4.7)", () => {
-  it("formatDuration follows the copy guide: 1 h 25 m, never 85 minutes", () => {
-    expect(formatDuration(5100)).toBe("1 h 25 m");
+  it("formatDuration follows the v2 copy guide: 1 h 25 min, never 85 minutes", () => {
+    expect(formatDuration(5100)).toBe("1 h 25 min");
     expect(formatDuration(3600)).toBe("1 h");
-    expect(formatDuration(300)).toBe("5 m");
-    expect(formatDuration(0)).toBe("0 m");
-    expect(formatDuration(-50)).toBe("0 m");
+    expect(formatDuration(300)).toBe("5 min");
+    expect(formatDuration(0)).toBe("0 min");
+    expect(formatDuration(-50)).toBe("0 min");
   });
 
   it("every contract error code has friendly copy", () => {
@@ -45,8 +45,8 @@ describe("copy + formatting helpers (P4.7)", () => {
 
   it("formatDuration keeps the copy guide at hour boundaries", () => {
     expect(formatDuration(60 * 60 * 2)).toBe("2 h");
-    expect(formatDuration(60 * 60 * 2 + 60 * 5)).toBe("2 h 5 m");
-    expect(formatDuration(59)).toBe("1 m"); // 59 s rounds up to a displayed minute
+    expect(formatDuration(60 * 60 * 2 + 60 * 5)).toBe("2 h 5 min");
+    expect(formatDuration(59)).toBe("1 min"); // 59 s rounds up to a displayable minuteplayed minute
   });
 
   it("copyFor never returns an empty string", () => {

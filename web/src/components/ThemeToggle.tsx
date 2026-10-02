@@ -28,7 +28,7 @@ export function ThemeToggle({ className }: { className?: string }) {
           title={label}
           onClick={() => setPref(value)}
           className={cn(
-            "flex h-7 w-8 items-center justify-center rounded-[7px] transition-colors duration-fast",
+            "flex h-11 w-11 items-center justify-center rounded-[7px] transition-colors duration-fast lg:h-7 lg:w-8",
             pref === value
               ? "bg-surface text-text shadow-elev1"
               : "text-text-muted hover:text-text",

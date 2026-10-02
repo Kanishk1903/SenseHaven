@@ -293,7 +293,7 @@ function StepPair({ onDone }: { onDone: () => void }) {
                   {group.split("").map((digit, di) => (
                     <span
                       key={di}
-                      className="tnum flex h-14 w-11 items-center justify-center rounded-control border border-border bg-surface-2 text-[32px] font-bold text-text"
+                      className="tnum flex h-14 w-11 items-center justify-center rounded-control border border-border bg-surface-2 text-[2rem] font-bold text-text"
                     >
                       {digit}
                     </span>

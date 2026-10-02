@@ -2,21 +2,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { api } from "@/lib/api";
-import { activeFixture, fixtureLive, fixtureOverview, fixtureTimeline, fixtureAppUsage,
+import { withFixture, activeFixture, fixtureLive, fixtureOverview, fixtureTimeline, fixtureAppUsage,
          fixtureSessions, fixtureAlerts } from "@/lib/fixture";
-
-
-// ---- Fixture harness (spec 7): dev/test-only, stripped from production builds ----
-
-/** Query function that serves fixture data when `?fixture=` is present (dev only).
- *  `loading` never settles; `error` rejects. */
-function withFixture<T>(real: () => Promise<T>, fixtureData: () => T): () => Promise<T> {
-  const name = activeFixture();
-  if (!name) return real;
-  if (name === "loading") return () => new Promise<T>(() => {});
-  if (name === "error") return () => Promise.reject(new Error("Fixture error"));
-  return () => Promise.resolve(fixtureData());
-}
 
 
 export type LiveState = {

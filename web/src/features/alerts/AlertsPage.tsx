@@ -96,7 +96,7 @@ export function AlertsPage() {
                             ) : null}
                           </p>
                           <p className="text-secondary text-text-muted">{alert.body}</p>
-                          <p className="mt-0.5 text-caption text-text-subtle">
+                          <p className="mt-0.5 font-mono text-caption text-text-subtle" data-nowrap>
                             {new Date(alert.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                           </p>
                         </div>

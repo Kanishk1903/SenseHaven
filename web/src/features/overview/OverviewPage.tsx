@@ -8,7 +8,6 @@ import { toast } from "sonner";
 
 import { cn } from "@/lib/cn";
 import { ApiError } from "@/lib/api";
-import { activeFixture } from "@/lib/fixture";
 import { handleApiError } from "@/lib/handleApiError";
 import { formatDuration } from "@/lib/format";
 import { useChild } from "@/app/childSelection";
@@ -51,11 +50,18 @@ function humanAgo(lastSeenAt: string | null, nowMs: number): { text: string; sta
 /** Status sentence (spec 4.4) — answers "Is everything OK right now?" in plain words. */
 function statusSentence(live: LiveState, name: string, lastStressAt: string | null): { h1: string } {
   const first = name || "Your child";
+  const sinceText = (lastSeenAt: string | null): string => {
+    if (!lastSeenAt) return "a while";
+    const minutes = Math.round((Date.now() - new Date(lastSeenAt).getTime()) / 60_000);
+    if (minutes < 60) return `${Math.max(1, minutes)} min`;
+    return `${Math.floor(minutes / 60)} h ${minutes % 60} min`;
+  };
   switch (live.state) {
     case "active": {
       const label = live.calm_index?.label;
-      const minutes = Math.max(0, Math.round((live.remaining_s ?? 0) / 60));
-      if (minutes < 5) return { h1: `${minutes} min left in ${name}'s session.` };
+      const rawMinutes = Math.max(0, live.remaining_s ?? 0) / 60;
+      if (rawMinutes < 5) return { h1: `${Math.ceil(rawMinutes)} min left in ${name}'s session.` };
+      const minutes = Math.round(rawMinutes);
       if (label === "calm") return { h1: `${first} is calm. ${minutes} min left in this session.` };
       if (label === "stressed" && lastStressAt) {
         const at = new Date(lastStressAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -70,9 +76,11 @@ function statusSentence(live: LiveState, name: string, lastStressAt: string | nu
       return { h1: `${first} has had a tense few minutes. A breather was offered at ${at}.` };
     }
     case "offline":
-      return { h1: `${first}'s phone hasn't checked in for a while. Limits still apply.` };
+      return { h1: `${first}'s phone hasn't checked in for ${sinceText(live.device?.last_seen_at ?? null)}. Limits still apply.` };
     case "locked":
-      return { h1: `${first}'s phone is locked.` };
+      return live.session === null
+        ? { h1: `${first} isn't in a session right now.` }
+        : { h1: `${first}'s phone is locked.` };
     default:
       return { h1: `${first} isn't in a session right now.` };
   }
@@ -107,7 +115,7 @@ function insightSentence(buckets: Bucket[], name: string): string | null {
   return sentence + ".";
 }
 
-function AddTimePopover({ sessionId }: { sessionId?: string }) {
+function AddTimePopover({ sessionId, queued = false }: { sessionId?: string; queued?: boolean }) {
   const [minutes, setMinutes] = useState<number | null>(10);
   const { child } = useChild();
   const command = useSessionCommand(child?.id);
@@ -115,11 +123,13 @@ function AddTimePopover({ sessionId }: { sessionId?: string }) {
     <Popover>
       <PopoverTrigger asChild>
         <Button variant="primary" disabled={!sessionId}>
-          <Plus size={16} aria-hidden /> Add time
+          <Plus size={16} aria-hidden /> {queued ? "Add time when back online" : "Add time"}
         </Button>
       </PopoverTrigger>
       <PopoverContent>
-        <p className="mb-2 text-secondary font-medium">Add 10 more minutes?</p>
+        <p className="mb-2 text-secondary font-medium">
+          {queued ? "Add time — it will apply when the phone reconnects." : "Add 10 more minutes?"}
+        </p>
         <DurationPicker valueMin={minutes} onChange={setMinutes} presets={[5, 10, 15, 30]} min={1} max={480} />
         <Button
           className="mt-3 w-full"
@@ -131,7 +141,7 @@ function AddTimePopover({ sessionId }: { sessionId?: string }) {
                 action: "adjust",
                 body: { delta_seconds: (minutes ?? 0) * 60, reason: "Added by parent" },
               });
-              toast.success(`Added ${minutes} min`, {
+              toast.success(queued ? `Queued +${minutes} min for when the phone reconnects` : `Added ${minutes} min`, {
                 action: {
                   label: "Undo",
                   onClick: () => {
@@ -165,12 +175,12 @@ function UpdatedLine({ lastSeenAt }: { lastSeenAt: string | null }) {
   const { text, stale } = humanAgo(lastSeenAt, Date.now());
   return (
     <p className="mt-5 flex flex-wrap items-center gap-2 text-caption">
-      <span className={stale ? "text-neutral-fg" : "text-text-subtle"} data-nowrap>
-        Last checked in {text}
+      <span className={`font-mono ${stale ? "text-neutral-fg" : "text-text-subtle"}`}>
+        Last checked in <span data-nowrap>{text}</span>
       </span>
       <span className="text-text-subtle">· Calm Index is an estimate</span>
       {stale ? (
-        <button type="button" className="text-primary underline underline-offset-2" onClick={() => window.location.reload()}>
+        <button type="button" className="inline-flex min-h-11 items-center px-1 text-primary underline underline-offset-2 lg:min-h-6" onClick={() => window.location.reload()}>
           Refresh
         </button>
       ) : null}
@@ -199,6 +209,7 @@ function NowPanel() {
   const session = state.session;
   const offline = state.state === "offline";
   const active = state.state === "active";
+  const lockedSession = state.state === "locked" && session !== null;
   const lastStressAt =
     alerts.data?.find((a) => a.kind === "stress_alert" && a.child_id === child?.id)?.created_at ?? null;
   const sentence = statusSentence(state, name, lastStressAt);
@@ -208,7 +219,7 @@ function NowPanel() {
       : 0;
 
   return (
-    <section className="h-full rounded-panel border border-border bg-surface p-5" aria-label="Current status">
+    <section className="h-full rounded-panel border border-border bg-surface p-[clamp(12px,2.5vw,1.25rem)]" aria-label="Current status">
       <p className="text-caption font-medium tracking-wide text-text-subtle">Now</p>
       {offline ? (
         <p className="mt-2 text-secondary text-text-muted">
@@ -216,7 +227,7 @@ function NowPanel() {
         </p>
       ) : null}
 
-      <div className="mt-4 flex flex-col items-start gap-6 sm:flex-row sm:items-center">
+      <div className="mt-4 flex flex-col gap-6 sm:flex-row sm:items-center">
         {/* ring + orb (176px, orb 96px inside; time sits to the RIGHT, not inside) */}
         <div
           className={cn("relative shrink-0", offline && "opacity-90")}
@@ -234,7 +245,8 @@ function NowPanel() {
               {!offline ? (
                 <circle
                   cx="88" cy="88" r="83" fill="none"
-                  stroke="var(--primary)" strokeWidth="10" strokeLinecap="round"
+                  stroke={active && (state.remaining_s ?? 0) < 5 * 60 ? "var(--neutral)" : "var(--primary)"}
+                  strokeWidth="10" strokeLinecap="round"
                   strokeDasharray={2 * Math.PI * 83}
                   strokeDashoffset={2 * Math.PI * 83 * (1 - fraction)}
                 />
@@ -249,16 +261,18 @@ function NowPanel() {
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="font-display text-h2 font-semibold text-text" data-nowrap>
+          <p className="font-display text-h2 font-semibold text-text">
             {sentence.h1}
           </p>
 
           {state.calm_index ? (
-            <div className="mt-3 flex flex-wrap items-center gap-2" data-nowrap>
-              <span className="tnum font-display text-[28px] font-semibold leading-8 text-text">
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <span className="tnum font-display text-[1.75rem] font-semibold leading-8 text-text" data-nowrap>
                 {state.calm_index.value}
               </span>
-              <StatusChip kind={state.calm_index.label as StatusKind} />
+              <span className="inline-flex items-center" data-nowrap>
+                <StatusChip kind={state.calm_index.label as StatusKind} />
+              </span>
               <span className="text-caption text-text-subtle">estimated from facial expressions</span>
             </div>
           ) : (
@@ -266,41 +280,48 @@ function NowPanel() {
           )}
 
           {state.remaining_s !== null ? (
-            <p className="mt-3" data-nowrap>
-              <span className="tnum font-display text-[40px] font-semibold leading-none text-text">
+            <p className="mt-3">
+              <span className="tnum inline-block font-display text-[2.5rem] font-semibold leading-none text-text" data-nowrap>
                 {Math.floor(Math.max(0, state.remaining_s) / 60)}
+                <span className="ml-1.5 inline-block align-baseline font-sans text-[1.375rem] font-normal text-text-muted">min</span>
               </span>
-              <span className="ml-1.5 inline-block text-[22px] text-text-muted">min</span>
-              <span className="ml-2 text-secondary text-text-subtle">left in this session</span>
+              <span className="ml-2 inline-block max-w-full text-secondary text-text-subtle">left in this session</span>
             </p>
           ) : null}
         </div>
       </div>
 
-      {/* actions: state-driven (spec 4.2) */}
+      {/* actions: state-driven (spec 4.2) — disabled actions carry their reason in text beneath */}
       <div className="mt-5 flex flex-wrap items-center gap-2">
-        {canAct(active) ? <AddTimePopover sessionId={session?.id} /> : null}
-        {session && canAct(active) ? (
+        {active ? <AddTimePopover sessionId={session?.id} /> : null}
+        {offline ? <AddTimePopover sessionId={session?.id} queued /> : null}
+        {session && active ? (
           <LockButton sessionId={session.id} disabled={command.isPending} name={name} />
         ) : null}
-        {session && canAct(active) ? <MoreMenu sessionId={session.id} name={name} /> : null}
-        {!canAct(active) && !offline && session === null ? <StartSessionButton /> : null}
+        {offline ? (
+          <Button variant="secondary" disabled>
+            <Lock size={16} aria-hidden /> Lock now
+          </Button>
+        ) : null}
+        {session && (active || state.state === "cooldown") ? <MoreMenu sessionId={session.id} name={name} /> : null}
+        {session && state.state === "cooldown" ? (
+          <LockButton sessionId={session.id} disabled={command.isPending} name={name} />
+        ) : null}
+        {(state.state === "locked" || state.state === "unpaired") ? <StartSessionButton /> : null}
       </div>
-      {!canAct(active) ? (
-        <p className="mt-2 text-caption text-text-subtle">
-          {offline
-            ? "Add time and lock will apply when the phone reconnects."
-            : "Start a session to enable actions."}
-        </p>
+      {offline ? (
+        <p className="mt-2 text-caption text-text-subtle">Locking applies when the phone reconnects; add-time is queued.</p>
+      ) : null}
+      {state.state === "cooldown" ? (
+        <p className="mt-2 text-caption text-text-subtle">A breather is running; add-time resumes after it ends.</p>
+      ) : null}
+      {lockedSession ? (
+        <p className="mt-2 text-caption text-text-subtle">A locked session can't be changed. Start a new session instead.</p>
       ) : null}
 
       <UpdatedLine lastSeenAt={state.device?.last_seen_at ?? null} />
     </section>
   );
-}
-
-function canAct(state: boolean): boolean {
-  return state;
 }
 
 function LockButton({ sessionId, disabled, name }: { sessionId: string; disabled: boolean; name: string }) {
@@ -422,8 +443,8 @@ function TodayLedger() {
     {
       label: "Average calm",
       value: (
-        <span className="flex items-baseline gap-2" data-nowrap>
-          {data.avg_calm !== null ? data.avg_calm : "—"}
+        <span className="flex flex-wrap items-baseline gap-x-2">
+          <span data-nowrap>{data.avg_calm !== null ? data.avg_calm : "—"}</span>
           {data.avg_calm_trend_pct !== null ? (
             <span className="tnum text-caption text-neutral-fg">
               ▾ {Math.abs(data.avg_calm_trend_pct)}% vs last 7 days
@@ -437,20 +458,21 @@ function TodayLedger() {
   ];
   return (
     <section aria-label="Today in numbers">
-      <dl>
+      <ul role="list" className="m-0 list-none p-0">
         {rows.map((row) => (
-          <div className="ledger-row" key={row.label}>
-            <dt className="ledger-label text-body text-text-muted">{row.label}</dt>
-            <dd className="ledger-rule" aria-hidden />
-            <dd className="ledger-value text-body">
-              {row.value}
-              {row.caption ? (
-                <span className="ml-2 font-sans text-caption font-normal text-text-subtle">{row.caption}</span>
-              ) : null}
-            </dd>
-          </div>
+          <li key={row.label}>
+            {/* leader row: label ··· value — captions live on their own sub-line (spec 4.3) */}
+            <div className="ledger-row">
+              <span className="ledger-label text-body text-text-muted">{row.label}</span>
+              <span className="ledger-rule" aria-hidden />
+              <span className="ledger-value text-body">{row.value}</span>
+            </div>
+            {row.caption ? (
+              <p className="pl-0.5 text-caption text-text-subtle">{row.caption}</p>
+            ) : null}
+          </li>
         ))}
-      </dl>
+      </ul>
     </section>
   );
 }
@@ -463,7 +485,7 @@ function WorthALook() {
     <section aria-label="Worth a look">
       <div className="flex items-baseline justify-between">
         <h2 className="font-display text-h3 font-semibold text-text">Worth a look</h2>
-        <Link to="/alerts" className="text-secondary text-primary underline-offset-2 hover:underline">
+        <Link to="/alerts" className="inline-flex min-h-11 items-center px-1 text-secondary text-primary underline-offset-2 hover:underline lg:min-h-6">
           All alerts
         </Link>
       </div>
@@ -487,7 +509,7 @@ function WorthALook() {
                 {!alert.read ? (
                   <>
                     {" · "}
-                    <button type="button" className="text-primary underline underline-offset-2" onClick={() => markRead.mutate(alert.id)}>
+                    <button type="button" className="inline-flex min-h-11 items-center px-1 text-primary underline underline-offset-2 lg:min-h-6" onClick={() => markRead.mutate(alert.id)}>
                       Mark read
                     </button>
                   </>
@@ -577,15 +599,15 @@ function TopAppsSection() {
 export function OverviewPage() {
   const { child, select: selectChild } = useChild();
   const children = useChildren();
-  const fixture = activeFixture();
 
   const live = useLive(child?.id);
   const overview = useOverview(child?.id, "today");
   const timeline = useTimeline(child?.id, "2026-10-02");
   const sessions = useSessions(child?.id, "today");
 
-  const empty = !fixture && children.data !== undefined && children.data.length === 0;
-  const loading = children.isPending || live.isPending || overview.isPending;
+  const empty = children.data !== undefined && children.data.length === 0;
+  // isLoading (pending AND fetching): disabled queries stay isPending forever when no child exists
+  const loading = children.isPending || live.isLoading || overview.isLoading;
   const anyError = [live, overview, timeline, sessions].find((q) => q.isError);
 
   const buckets = timeline.data?.buckets ?? [];
@@ -606,7 +628,7 @@ export function OverviewPage() {
   return (
     <main
       data-testid={loading ? "overview-loading" : "overview-ready"}
-      className="mx-auto w-full max-w-[1180px] px-4 pb-10 pt-6 lg:px-8"
+      className="mx-auto w-full max-w-[1180px] px-[clamp(8px,2.5vw,2rem)] pb-10 pt-6 lg:px-8"
     >
       {empty ? (
         <div className="flex min-h-[50vh] items-center justify-center">
@@ -614,7 +636,7 @@ export function OverviewPage() {
             title="No device connected yet"
             body="Add your child and pair their phone to see live status, calm data and app usage."
             action={
-              <Link to="/onboarding" className="rounded-control bg-primary px-4 py-2 font-medium text-on-primary hover:bg-primary-hover">
+              <Link to="/onboarding" className="inline-flex min-h-11 items-center rounded-control bg-primary px-4 py-2 font-medium text-on-primary hover:bg-primary-hover">
                 Set up your child's phone
               </Link>
             }
@@ -640,12 +662,14 @@ export function OverviewPage() {
             <p className="text-caption text-text-subtle" data-nowrap>
               {greeting}
             </p>
-            <h1 className="mt-1 font-display text-h1 font-semibold text-text" data-nowrap>
+            <h1 className="mt-1 font-display text-h1 font-semibold text-text">
               {sentence?.h1}
             </h1>
-            <p className="mt-1 text-secondary text-text-muted" data-nowrap>
-              Last checked in {live.data ? humanAgo(live.data.device?.last_seen_at ?? null, Date.now()).text : "…"}
-              {" · Calm Index is an estimate"}
+            <p className="mt-1 flex flex-wrap items-center gap-x-2 text-secondary text-text-muted">
+              <span className="font-mono">
+                Last checked in <span data-nowrap>{live.data ? humanAgo(live.data.device?.last_seen_at ?? null, Date.now()).text : "…"}</span>
+              </span>
+              <span>· Calm Index is an estimate</span>
             </p>
             {children.data && children.data.length > 1 ? (
               <div className="mt-3 flex flex-wrap gap-2">
