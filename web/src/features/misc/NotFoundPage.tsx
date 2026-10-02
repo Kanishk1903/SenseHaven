@@ -9,7 +9,7 @@ export function NotFoundPage() {
         title="We couldn't find that page"
         body="It may have been moved or removed. Head back to your dashboard."
         action={
-          <Link to="/" className="rounded-input bg-primary px-4 py-2 font-medium text-on-primary hover:bg-primary-hover">
+          <Link to="/" className="rounded-control bg-primary px-4 py-2 font-medium text-on-primary hover:bg-primary-hover">
             Back to SenseHeaven
           </Link>
         }

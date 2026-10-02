@@ -5,47 +5,44 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 object Tokens {
-    val Bg = Color(0xFFF7F7F4)
+    val Bg = Color(0xFFF5F6FA)
     val Surface = Color(0xFFFFFFFF)
-    val Surface2 = Color(0xFFF1F1EC)
-    val Border = Color(0xFFE4E4DD)
-    val Text = Color(0xFF171714)
-    val TextMuted = Color(0xFF5B5B54)
-    val TextSubtle = Color(0xFF6B6B63)
-    val Primary = Color(0xFF3549D8)
-    val PrimaryHover = Color(0xFF2B3BB3)
-    val PrimarySoft = Color(0xFFEAEEFF)
+    val Surface2 = Color(0xFFEEF0F6)
+    val Surface3 = Color(0xFFE6E9F2)
+    val Border = Color(0xFFE1E4EE)
+    val BorderStrong = Color(0xFFC9CEDD)
+    val Text = Color(0xFF14162A)
+    val TextMuted = Color(0xFF555A73)
+    val TextSubtle = Color(0xFF6A6F88)
+    val Primary = Color(0xFF3F4FE0)
+    val PrimaryHover = Color(0xFF3140C4)
+    val PrimarySoft = Color(0xFFE9ECFF)
     val OnPrimary = Color(0xFFFFFFFF)
-    val Calm = Color(0xFF2F8F6B)
-    val CalmFg = Color(0xFF1D6449)
-    val CalmSoft = Color(0xFFE2F4EC)
-    val Neutral = Color(0xFFC58A1B)
-    val NeutralFg = Color(0xFF8A5A0B)
-    val NeutralSoft = Color(0xFFFBF1D9)
-    val Stress = Color(0xFFD4532F)
-    val StressFg = Color(0xFFA93A1B)
-    val StressSoft = Color(0xFFFCE6DE)
-    val FocusRing = Color(0xFF3549D8)
+    val Calm = Color(0xFF1F9D74)
+    val CalmFg = Color(0xFF14684D)
+    val CalmSoft = Color(0xFFE0F5EC)
+    val Neutral = Color(0xFFD99A1E)
+    val NeutralFg = Color(0xFF8A5A00)
+    val NeutralSoft = Color(0xFFFBF0D6)
+    val Stress = Color(0xFFE0553A)
+    val StressFg = Color(0xFFA82F18)
+    val StressSoft = Color(0xFFFDE7E1)
+    val Info = Color(0xFF3F4FE0)
+    val InfoFg = Color(0xFF2B3BB3)
+    val InfoSoft = Color(0xFFE9ECFF)
 
-    val Space1 = 4.dp
-    val Space2 = 8.dp
-    val Space3 = 12.dp
-    val Space4 = 16.dp
-    val Space5 = 24.dp
-    val Space6 = 32.dp
-    val Space7 = 48.dp
-    val Space8 = 64.dp
-
-    val RadiusInput = 8.dp
-    val RadiusCard = 12.dp
-    val RadiusDialog = 16.dp
+    val RadiusControl = 10.dp
+    val RadiusCard = 16.dp
+    val RadiusDialog = 20.dp
+    val RadiusHero = 24.dp
     val RadiusPill = 999.dp
 
     val FocusRingWidth = 2.dp
     val FocusRingOffset = 2.dp
 
     const val FONT_SANS = "Inter Variable"
-    const val MOTION_FAST_MS = 150
-    const val MOTION_EXPAND_MS = 220
-    const val MOTION_DIALOG_MS = 320
+    const val FONT_DISPLAY = "Manrope Variable"
+    const val MOTION_FAST_MS = 120
+    const val MOTION_BASE_MS = 200
+    const val MOTION_SLOW_MS = 320
 }

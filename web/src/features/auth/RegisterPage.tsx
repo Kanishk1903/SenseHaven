@@ -111,7 +111,7 @@ export function RegisterPage() {
         </label>
 
         {serverError ? (
-          <div role="alert" className="rounded-input bg-stress-soft px-3 py-2 text-secondary text-stress-fg">
+          <div role="alert" className="rounded-control bg-stress-soft px-3 py-2 text-secondary text-stress-fg">
             {serverError}
           </div>
         ) : null}

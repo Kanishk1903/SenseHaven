@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 
@@ -19,6 +20,7 @@ import {
 } from "@/features/apiHooks";
 import { api } from "@/lib/api";
 import { formatDuration } from "@/lib/format";
+import { CalmChart } from "@/components/charts/CalmChart";
 import { useChild } from "@/app/childSelection";
 
 function shiftDate(iso: string, days: number): string {
@@ -42,7 +44,6 @@ function EmotionTab() {
   const distribution = useDistribution(child?.id, date);
 
   const buckets = timeline.data?.buckets ?? [];
-  const points = buckets.map((bucket) => ({ t: bucket.t, value: bucket.value }));
   const stressEpisodes = useSessions(child?.id, "7d").data?.filter((session) =>
     session.ledger.some((entry: LedgerRow) => entry.kind === "stress_alert"),
   );
@@ -90,10 +91,7 @@ function EmotionTab() {
             <CardTitle>Calm Index through the day</CardTitle>
           </CardHeader>
           <CardContent>
-            <EmotionChart points={points} />
-            <p className="mt-2 text-caption text-text-subtle">
-              Gaps mean no face was seen — we never guess between samples.
-            </p>
+            <CalmChart buckets={buckets} height={240} ariaLabel="Calm Index through the day" />
           </CardContent>
         </Card>
       )}
@@ -152,72 +150,7 @@ function EmotionTab() {
   );
 }
 
-function minuteOfDay(iso: string): number {
-  const date = new Date(iso);
-  return date.getHours() * 60 + date.getMinutes();
-}
 
-function EmotionChart({ points }: { points: { t: string; value: number | null }[] }) {
-  const [showTable, setShowTable] = useState(false);
-  const width = 800;
-  const height = 200;
-  // x is time-proportional across the whole day — gaps stay gaps, never re-scaled.
-  const coords = points
-    .map((point) => ({ x: (minuteOfDay(point.t) / 1439) * width, value: point.value, t: point.t }))
-    .filter((point): point is { x: number; value: number; t: string } => point.value !== null);
-  const segments: string[] = [];
-  let current: string[] = [];
-  for (const point of coords) {
-    if (current.length === 0 || point.x - xOf(current[current.length - 1]) <= 15) {
-      current.push(`${current.length === 0 ? "M" : "L"}${point.x.toFixed(1)},${(height - (point.value / 100) * height).toFixed(1)}`);
-    } else {
-      segments.push(current.join(" "));
-      current = [`M${point.x.toFixed(1)},${(height - (point.value / 100) * height).toFixed(1)}`];
-    }
-    function xOf(command: string): number {
-      return Number(command.split(/[ML]/)[1]?.split(",")[0] ?? 0);
-    }
-  }
-  if (current.length > 0) segments.push(current.join(" "));
-  const path = segments.join(" ");
-
-  return (
-    <div>
-      {showTable ? (
-        <table className="max-h-48 w-full overflow-y-auto text-caption" aria-label="Calm index values">
-          <thead>
-            <tr className="text-left text-text-muted">
-              <th scope="col" className="py-1">Time</th>
-              <th scope="col" className="py-1">Calm Index</th>
-            </tr>
-          </thead>
-          <tbody className="tnum">
-            {coords.slice(0, 200).map((point) => (
-              <tr key={point.t}>
-                <td className="py-0.5">{new Date(point.t).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</td>
-                <td className="py-0.5">{point.value}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      ) : (
-        <svg viewBox={`0 0 ${width} ${height}`} className="h-48 w-full" role="img" aria-label="Calm Index through the day">
-          <rect x="0" y="0" width={width} height={height * 0.3} fill="var(--calm-soft)" opacity="0.6" />
-          <rect x="0" y={height * 0.65} width={width} height={height * 0.35} fill="var(--stress-soft)" opacity="0.6" />
-          <line x1="0" y1={height * 0.3} x2={width} y2={height * 0.3} stroke="var(--border)" />
-          <line x1="0" y1={height * 0.65} x2={width} y2={height * 0.65} stroke="var(--border)" />
-          <path d={path} fill="none" stroke="var(--calm)" strokeWidth="2" strokeLinecap="round" />
-          {coords.map((point) => (
-            <circle key={point.t} cx={point.x} cy={height - (point.value / 100) * height} r={3.5} fill="var(--calm)" />
-          ))}
-        </svg>
-      )}
-      <button type="button" className="mt-1 text-caption text-primary underline" onClick={() => setShowTable((value) => !value)}>
-        {showTable ? "Show chart" : "Show as table"}
-      </button>
-    </div>
-  );
-}
 
 function ScreenTimeTab() {
   const { child } = useChild();
@@ -286,7 +219,23 @@ function SessionsTab() {
     { key: "bonus", header: "Bonus", render: (row) => formatDuration(row.bonus_s), sortValue: (row) => row.bonus_s },
     { key: "penalty", header: "Penalty", render: (row) => formatDuration(row.penalty_s), sortValue: (row) => row.penalty_s },
     { key: "calm", header: "Avg calm", render: (row) => (row.avg_calm !== null ? String(row.avg_calm) : "—"), sortValue: (row) => row.avg_calm ?? -1 },
-    { key: "status", header: "End", render: (row) => row.end_reason ?? row.status },
+    {
+      key: "status",
+      header: "End",
+      render: (row) => {
+        const labels: Record<string, string> = {
+          ended: "Ended by child",
+          expired: "Time up",
+          locked: "Locked by you",
+        };
+        const label = labels[row.end_reason ?? ""] ?? row.status;
+        return (
+          <span className="rounded-pill bg-surface-2 px-2 py-0.5 text-caption text-text-muted">
+            {label}
+          </span>
+        );
+      },
+    },
     {
       key: "expand",
       header: "",
@@ -332,10 +281,12 @@ function SessionsTab() {
 
 export function AnalyticsPage() {
   const { child } = useChild();
+  const [params, setParams] = useSearchParams();
+  const tab = params.get("tab") ?? "emotion";
   return (
     <div>
       <PageHeader title={`${child?.name ?? "Child"} — analytics`} description="Honest data: gaps stay gaps." />
-      <Tabs defaultValue="emotion">
+      <Tabs value={tab} onValueChange={(value) => setParams({ tab: value })}>
         <TabsList>
           <TabsTrigger value="emotion">Emotion</TabsTrigger>
           <TabsTrigger value="screen-time">Screen time</TabsTrigger>
@@ -343,6 +294,9 @@ export function AnalyticsPage() {
         </TabsList>
         <TabsContent value="emotion" className="mt-4">
           <EmotionTab />
+          <p className="mt-3 text-caption text-text-subtle">
+            Episodes are moments of sustained stress signals, not diagnoses.
+          </p>
         </TabsContent>
         <TabsContent value="screen-time" className="mt-4">
           <ScreenTimeTab />

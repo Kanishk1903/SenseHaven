@@ -14,7 +14,7 @@ export const PopoverContent = forwardRef<HTMLDivElement, React.ComponentProps<ty
         align={align}
         sideOffset={sideOffset}
         className={cn(
-          "z-50 w-72 rounded-card border border-border bg-surface p-4 shadow-md",
+          "z-50 w-72 rounded-card border border-border bg-surface p-4 shadow-elev2",
           className,
         )}
         {...props}

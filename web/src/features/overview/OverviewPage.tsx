@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
 import { ApiError } from "@/lib/api";
+import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -11,6 +12,7 @@ import { DurationPicker } from "@/components/DurationPicker";
 import { ErrorState } from "@/components/ErrorState";
 import { Kpi } from "@/components/Kpi";
 import { PageHeader } from "@/components/PageHeader";
+import { CalmChart } from "@/components/charts/CalmChart";
 import { Ring } from "@/components/Ring";
 import { SkeletonCard } from "@/components/Skeleton";
 import { Sparkline } from "@/components/Sparkline";
@@ -27,10 +29,6 @@ import {
 import { useChild } from "@/app/childSelection";
 import { formatDuration } from "@/lib/format";
 
-function minuteOfDay(iso: string): number {
-  const date = new Date(iso);
-  return date.getHours() * 60 + date.getMinutes();
-}
 import { useChildren } from "@/lib/queries";
 import { handleApiError } from "@/lib/handleApiError";
 
@@ -89,7 +87,15 @@ function AddTimePopover({ sessionId, disabled }: { sessionId?: string; disabled?
                 action: "adjust",
                 body: { delta_seconds: (minutes ?? 0) * 60, reason: "Added by parent" },
               });
-              toast(`Added ${minutes} min`);
+              toast.success(`Added ${minutes} min`, {
+                action: { label: "Undo", onClick: () => {
+                  void command.mutateAsync({
+                    sessionId: sessionId!,
+                    action: "adjust",
+                    body: { delta_seconds: -(minutes ?? 0) * 60, reason: "Undo add time" },
+                  });
+                } },
+              });
               setMinutes(null);
             } catch (error) {
               await handleApiError(error);
@@ -162,17 +168,24 @@ function LiveStatusCard() {
     ? timeline.data.buckets.slice(-30).map((bucket) => bucket.value)
     : [];
 
+  const offline = state.state === "offline";
   return (
-    <Card className="h-full">
+    <Card className={cn("h-full", offline && "opacity-70")}>
       <CardHeader className="flex-row items-center justify-between space-y-0">
         <CardTitle>Right now</CardTitle>
         <StatusChip kind={statusKind} />
       </CardHeader>
       <CardContent>
+        {offline ? (
+          <p className="mb-3 text-secondary text-text-muted">
+            {child?.name ?? "Your child"}'s phone hasn't checked in recently — limits still
+            work offline.
+          </p>
+        ) : null}
         <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
           <div className="flex flex-col items-center gap-2">
             <Ring
-              fraction={fraction}
+              fraction={offline ? 0 : fraction}
               label={state.remaining_s !== null ? formatDuration(state.remaining_s) : "—"}
               sub="remaining"
             />
@@ -253,7 +266,7 @@ function TodayKpis() {
     <div className="grid grid-cols-2 gap-3">
       <Kpi label="Screen time today" value={formatDuration(data.screen_time_s)} />
       <Kpi label="Avg calm" value={data.avg_calm !== null ? String(data.avg_calm) : "—"} trendPct={data.avg_calm_trend_pct} />
-      <Kpi label="Stress signals" value={String(data.stress_episodes)} hint="breathers started" />
+      <Kpi label="Breathers started" value={String(data.stress_episodes)} hint="moments the app suggested a pause" />
       <Kpi label="Bonus earned" value={formatDuration(data.bonus_s)} hint={`${formatDuration(data.penalty_s)} penalised`} />
     </div>
   );
@@ -273,9 +286,12 @@ function CalmTimelineCard() {
       </CardHeader>
       <CardContent>
         {hasData ? (
-          <div className="h-40 [&_svg]:overflow-visible">
-            <TimelineChart buckets={buckets} />
-          </div>
+          <CalmChart
+            buckets={buckets}
+            compact
+            height={150}
+            ariaLabel="Calm Index timeline for today"
+          />
         ) : (
           <p className="py-6 text-center text-secondary text-text-muted">
             No calm data yet today — it appears once a session runs with the camera on.
@@ -286,34 +302,6 @@ function CalmTimelineCard() {
   );
 }
 
-function TimelineChart({ buckets }: { buckets: { t: string; value: number | null }[] }) {
-  const width = 600;
-  const height = 150;
-  // x proportional to minute-of-day; gaps stay gaps (never re-scaled or interpolated).
-  const points = buckets
-    .map((bucket) => ({
-      x: (minuteOfDay(bucket.t) / 1439) * width,
-      value: bucket.value,
-    }))
-    .filter((point): point is { x: number; value: number } => point.value !== null);
-  if (points.length === 0) return null;
-  const path = points
-    .map((point, index) => {
-      const y = height - (point.value / 100) * height;
-      return `${index === 0 ? "M" : "L"}${point.x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(" ");
-  return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="h-40 w-full" role="img" aria-label="Calm index timeline for today">
-      <line x1="0" y1={height - 0.7 * height} x2={width} y2={height - 0.7 * height} stroke="var(--border)" strokeDasharray="4 4" />
-      <line x1="0" y1={height - 0.35 * height} x2={width} y2={height - 0.35 * height} stroke="var(--border)" strokeDasharray="4 4" />
-      <path d={path} fill="none" stroke="var(--calm)" strokeWidth="2" strokeLinecap="round" />
-      {points.map((point, index) => (
-        <circle key={index} cx={point.x} cy={height - (point.value / 100) * height} r={3.5} fill="var(--calm)" />
-      ))}
-    </svg>
-  );
-}
 
 function AlertsFeed() {
   const alerts = useAlerts();
@@ -416,7 +404,7 @@ export function OverviewPage() {
           </p>
           <Link
             to="/onboarding"
-            className="mt-4 inline-flex h-10 items-center rounded-input bg-primary px-4 font-medium text-on-primary hover:bg-primary-hover"
+            className="mt-4 inline-flex h-10 items-center rounded-control bg-primary px-4 font-medium text-on-primary hover:bg-primary-hover"
           >
             Set up your child's phone
           </Link>
@@ -428,8 +416,8 @@ export function OverviewPage() {
   return (
     <div>
       <PageHeader
-        title={child ? `${child.name}'s overview` : "Overview"}
-        description="Is everything OK right now?"
+        title={`Hi ${child?.name ?? "there"}'s parent`}
+        description={`${child?.name ?? "Your child"}'s today — is everything OK right now?`}
       />
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">

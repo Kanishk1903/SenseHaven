@@ -98,7 +98,7 @@ export function LoginPage() {
         </label>
 
         {serverError ? (
-          <div role="alert" className="rounded-input bg-stress-soft px-3 py-2 text-secondary text-stress-fg">
+          <div role="alert" className="rounded-control bg-stress-soft px-3 py-2 text-secondary text-stress-fg">
             {rateLimited && countdown > 0
               ? `${serverError.message} You can try again in ${countdown} s.`
               : serverError.message}

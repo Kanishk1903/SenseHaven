@@ -29,9 +29,24 @@ export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {}
 
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, type = "button", ...props }, ref) => (
-    <button ref={ref} type={type} className={cn(buttonVariants({ variant, size }), className)} {...props} />
+export const Button = forwardRef<HTMLButtonElement, ButtonProps & { loading?: boolean }>(
+  ({ className, variant, size, type = "button", loading, disabled, children, ...props }, ref) => (
+    <button
+      ref={ref}
+      type={type}
+      aria-busy={loading || undefined}
+      disabled={disabled || loading}
+      className={cn(buttonVariants({ variant, size }), "active:scale-[0.98]", className)}
+      {...props}
+    >
+      {loading ? (
+        <span
+          aria-hidden
+          className="h-4 w-4 animate-spin rounded-pill border-2 border-current border-t-transparent"
+        />
+      ) : null}
+      {children}
+    </button>
   ),
 );
 Button.displayName = "Button";

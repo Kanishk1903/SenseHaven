@@ -69,7 +69,7 @@ export function PinInput({
             key={index}
             aria-hidden
             className={cn(
-              "flex h-10 w-8 items-center justify-center rounded-input border border-border bg-surface",
+              "flex h-10 w-8 items-center justify-center rounded-control border border-border bg-surface",
               digit && "border-primary",
             )}
           >

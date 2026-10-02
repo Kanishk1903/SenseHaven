@@ -4,7 +4,7 @@ import { cn } from "@/lib/cn";
 
 export const Card = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("rounded-card border border-border bg-surface shadow-sm", className)} {...props} />
+    <div ref={ref} className={cn("rounded-card border border-border bg-surface shadow-elev1", className)} {...props} />
   ),
 );
 Card.displayName = "Card";

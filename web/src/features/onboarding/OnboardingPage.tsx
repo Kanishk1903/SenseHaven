@@ -29,19 +29,33 @@ export function OnboardingPage() {
   return (
     <main className="mx-auto max-w-[600px] px-4 py-10">
       <h1 className="text-h1 font-semibold">Set up SenseHeaven</h1>
-      <ol className="mt-4 flex items-center gap-2 text-caption" aria-label="Progress">
+      <ol className="mt-4 hidden items-center text-caption sm:flex" aria-label="Progress">
         {STEPS.map((label, index) => (
-          <li
-            key={label}
-            className={`flex items-center gap-1.5 rounded-pill px-2.5 py-1 ${
-              index === step ? "bg-primary-soft font-medium text-primary" : index < step ? "text-calm-fg" : "text-text-subtle"
-            }`}
-            aria-current={index === step ? "step" : undefined}
-          >
-            <span className="tnum">{index + 1}</span> {label}
+          <li key={label} className="flex items-center">
+            {index > 0 ? <span aria-hidden className="mx-2 h-px w-8 bg-border-strong" /> : null}
+            <span
+              className={`flex items-center gap-1.5 rounded-pill px-2.5 py-1 ${
+                index === step
+                  ? "bg-primary-soft font-medium text-primary"
+                  : index < step
+                    ? "text-calm-fg"
+                    : "text-text-subtle"
+              }`}
+              aria-current={index === step ? "step" : undefined}
+            >
+              <span className="tnum">{index + 1}</span> {label}
+            </span>
           </li>
         ))}
       </ol>
+      <div className="mt-4 sm:hidden">
+        <p className="text-secondary text-text-muted" aria-current="step">
+          Step {step + 1} of {STEPS.length} &middot; {STEPS[step]}
+        </p>
+        <div className="mt-1.5 h-1 rounded-pill bg-surface-2" role="progressbar" aria-valuemin={1} aria-valuemax={STEPS.length} aria-valuenow={step + 1}>
+          <div className="h-1 rounded-pill bg-primary" style={{ width: `${((step + 1) / STEPS.length) * 100}%` }} />
+        </div>
+      </div>
 
       <div className="mt-6">
         {step === 0 ? (
@@ -109,7 +123,7 @@ function StepAddChild({ onDone }: { onDone: () => void }) {
           </div>
         </fieldset>
         {error ? (
-          <div role="alert" className="rounded-input bg-stress-soft px-3 py-2 text-secondary text-stress-fg">
+          <div role="alert" className="rounded-control bg-stress-soft px-3 py-2 text-secondary text-stress-fg">
             {error}
           </div>
         ) : null}
@@ -163,7 +177,7 @@ function StepSetPin({ onDone }: { onDone: () => void }) {
               />
             </label>
             {error ? (
-              <div role="alert" className="rounded-input bg-stress-soft px-3 py-2 text-secondary text-stress-fg">
+              <div role="alert" className="rounded-control bg-stress-soft px-3 py-2 text-secondary text-stress-fg">
                 {error}
               </div>
             ) : null}
@@ -269,9 +283,24 @@ function StepPair({ onDone }: { onDone: () => void }) {
             <p className="text-center text-secondary text-text-muted">
               Enter this code in the SenseHeaven app on the phone. It lasts 10 minutes.
             </p>
-            <p className="tnum text-center text-h1 font-semibold tracking-[0.3em]" aria-label={`Pairing code ${code}`}>
-              {code}
-            </p>
+            <div
+              className="flex items-center justify-center gap-3"
+              role="img"
+              aria-label={`Pairing code ${code}`}
+            >
+              {[code.slice(0, 3), code.slice(3)].map((group, gi) => (
+                <div key={gi} className="flex gap-2">
+                  {group.split("").map((digit, di) => (
+                    <span
+                      key={di}
+                      className="tnum flex h-14 w-11 items-center justify-center rounded-control border border-border bg-surface-2 text-[32px] font-bold text-text"
+                    >
+                      {digit}
+                    </span>
+                  ))}
+                </div>
+              ))}
+            </div>
             <p className="tnum text-center text-caption text-text-subtle">
               {secondsLeft > 0 ? `Expires in ${Math.floor(secondsLeft / 60)}:${String(secondsLeft % 60).padStart(2, "0")}` : "Expired"}
             </p>
@@ -296,7 +325,7 @@ function StepPair({ onDone }: { onDone: () => void }) {
               </ol>
             </div>
             {pairedDevice ? (
-              <div role="status" className="rounded-input bg-calm-soft px-3 py-2 text-center text-secondary text-calm-fg">
+              <div role="status" className="rounded-control bg-calm-soft px-3 py-2 text-center text-secondary text-calm-fg">
                 {pairedDevice.name} is connected — finishing up…
               </div>
             ) : (
@@ -306,7 +335,7 @@ function StepPair({ onDone }: { onDone: () => void }) {
             )}
           </>
         ) : error ? (
-          <div role="alert" className="rounded-input bg-stress-soft px-3 py-2 text-secondary text-stress-fg">
+          <div role="alert" className="rounded-control bg-stress-soft px-3 py-2 text-secondary text-stress-fg">
             {error}
           </div>
         ) : (

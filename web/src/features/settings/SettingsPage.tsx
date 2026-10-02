@@ -102,10 +102,10 @@ export function SettingsPage() {
   const saveBarVisible = dirty || save.isSuccess;
 
   return (
-    <div>
+    <div className="mx-auto max-w-[760px]">
       <PageHeader title={`${child?.name ?? "Child"} — settings`} description="Changes apply on the phone's next check-in." />
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="space-y-4">
         <Card>
           <CardHeader>
             <CardTitle>Session defaults</CardTitle>
@@ -259,17 +259,27 @@ export function SettingsPage() {
 
         <DeviceCard />
 
-        <Card>
+        <Card className="border-stress/40">
           <CardHeader>
-            <CardTitle>Privacy</CardTitle>
+            <CardTitle>Danger zone</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button variant="outline" onClick={() => setDeleteHistoryOpen(true)}>
-              Delete history
-            </Button>
-            <Button variant="danger" onClick={() => setDeleteChildOpen(true)}>
-              Delete child
-            </Button>
+            <p className="text-secondary text-text-muted">
+              Data handling: Calm Index (1 per 10 s), daily app totals and ledger events are
+              stored on our servers. Camera frames never leave the phone.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" onClick={() => setDeleteHistoryOpen(true)}>
+                Delete history
+              </Button>
+              <Button
+                variant="outline"
+                className="border-stress text-stress-fg hover:bg-stress-soft"
+                onClick={() => setDeleteChildOpen(true)}
+              >
+                Delete child
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -279,7 +289,7 @@ export function SettingsPage() {
           saveBarVisible ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       >
-        <div className="mx-auto flex max-w-md items-center justify-between gap-3 rounded-card border border-border bg-surface p-3 shadow-md">
+        <div className="mx-auto flex max-w-md items-center justify-between gap-3 rounded-card border border-border bg-surface p-3 shadow-elev2">
           <span className="text-secondary">{dirty ? "You have unsaved changes" : "All changes saved"}</span>
           <div className="flex gap-2">
             <Button variant="ghost" onClick={() => setDraft(structuredClone(settings.data!))} disabled={!dirty}>

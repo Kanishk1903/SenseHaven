@@ -32,11 +32,12 @@ export function StatusChip({ kind, label, className }: { kind: StatusKind; label
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-pill px-2.5 py-1 text-caption font-medium",
+        "inline-flex h-7 items-center gap-1.5 rounded-pill border px-2.5 text-caption font-medium",
         soft,
         fg,
         className,
       )}
+      style={{ borderColor: "color-mix(in srgb, currentColor 20%, transparent)" }}
     >
       <Icon size={14} aria-hidden />
       {label ?? KIND_LABELS[kind]}

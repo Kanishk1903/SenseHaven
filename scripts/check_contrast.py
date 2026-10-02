@@ -41,19 +41,27 @@ def contrast_ratio(fg: str, bg: str) -> float:
     return (lighter + 0.05) / (darker + 0.05)
 
 
-def main() -> int:
-    colors = json.loads((ROOT / "design" / "tokens.json").read_text())["color"]
+def check_theme(name: str, colors: dict) -> bool:
     failed = False
+    print(f"\n[{name}]")
     print(f"{'pair':<34} {'ratio':>6}  bar   use")
     for fg, bg, bar, use in PAIRS:
         r = contrast_ratio(colors[fg], colors[bg])
         ok = r >= bar
-        failed = failed or not ok
+        failed = not ok
         print(f"{fg} on {bg:<22} {r:6.2f}  {bar:<4}  {'PASS' if ok else 'FAIL'}  {use}")
+    return failed
+
+
+def main() -> int:
+    tokens = json.loads((ROOT / "design" / "tokens.json").read_text())
+    failed = check_theme("light", tokens["color"])
+    if "dark" in tokens:
+        failed = check_theme("dark", tokens["dark"]) or failed
     if failed:
-        print("check_contrast: FAIL — adjust the token, log in GATES_CHANGELOG.md, re-run")
+        print("\ncheck_contrast: FAIL — adjust the token, log in GATES_CHANGELOG.md, re-run")
         return 1
-    print("check_contrast: all documented pairs pass")
+    print("\ncheck_contrast: all documented pairs pass in both themes")
     return 0
 
 

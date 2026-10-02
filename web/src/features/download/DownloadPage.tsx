@@ -36,7 +36,7 @@ export function DownloadPage() {
                 </div>
                 <a
                   href={apk.data.url}
-                  className="inline-flex h-10 items-center gap-2 rounded-input bg-primary px-4 font-medium text-on-primary hover:bg-primary-hover"
+                  className="inline-flex h-10 items-center gap-2 rounded-control bg-primary px-4 font-medium text-on-primary hover:bg-primary-hover"
                   download
                 >
                   <Download size={16} aria-hidden /> Download APK

@@ -6,6 +6,20 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="description" content="Calm screen-time wellbeing for families" />
     <title>SenseHeaven</title>
+    <script>
+      (function () {
+        try {
+          var pref = localStorage.getItem('sh-theme') || 'system';
+          var dark = pref === 'dark' ||
+            (pref === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
+          document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+          document.documentElement.dataset.themePref = pref;
+        } catch (e) {}
+      })();
+    </script>
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#F5F6FA" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0C0E14" media="(prefers-color-scheme: dark)">
   </head>
   <body>
     <div id="root"></div>

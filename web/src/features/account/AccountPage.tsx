@@ -73,7 +73,7 @@ export function AccountPage() {
                 />
               </label>
               {message ? (
-                <div role="status" className="rounded-input bg-calm-soft px-3 py-2 text-secondary text-calm-fg">
+                <div role="status" className="rounded-control bg-calm-soft px-3 py-2 text-secondary text-calm-fg">
                   {message}
                 </div>
               ) : null}
@@ -105,7 +105,7 @@ export function AccountPage() {
             </div>
           )}
           {setPinMutation.isError ? (
-            <div role="alert" className="rounded-input bg-stress-soft px-3 py-2 text-secondary text-stress-fg">
+            <div role="alert" className="rounded-control bg-stress-soft px-3 py-2 text-secondary text-stress-fg">
               {setPinMutation.error.message}
             </div>
           ) : null}

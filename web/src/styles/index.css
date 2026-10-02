@@ -7,18 +7,41 @@
 @layer base {
   html {
     font-family: "Inter Variable", system-ui, sans-serif;
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
   }
   body {
-    @apply bg-bg text-text antialiased;
+    @apply bg-bg text-text;
+    font-synthesis-weight: none;
   }
-  /* focus ring from tokens: 2px primary ring, 2px offset */
   :focus-visible {
-    outline: 2px solid var(--primary);
+    outline: var(--focus-ring-width) solid var(--primary);
     outline-offset: var(--focus-ring-offset);
     border-radius: 4px;
   }
-  /* tabular numerals wherever numbers line up (File 02 §2.3) */
   .tnum {
     font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
   }
+  ::placeholder {
+    color: var(--text-subtle);
+  }
+}
+
+/* Reduced motion: strip translate/scale, shorten to opacity (spec 6) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Dark-mode specifics (spec 3.4): dim illustrations slightly */
+:root[data-theme="dark"] img,
+:root[data-theme="dark"] svg[class*="illustration"] {
+  filter: brightness(0.92);
 }
