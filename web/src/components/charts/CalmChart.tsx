@@ -32,7 +32,7 @@ type Props = {
 
 const PAD_LEFT = 34;
 const PAD_RIGHT = 46;
-const PAD_TOP = 8;
+const PAD_TOP = 14; // headroom for the 12px '100' label's ascender at plot top
 const PAD_BOTTOM = 22;
 
 function minuteOfDay(iso: string): number {
@@ -45,7 +45,7 @@ function fmtTime(iso: string): string {
 }
 
 /** Choose tick positions: every ~2h for a full day, ~30 min for tight windows. */
-function chooseTicks(minM: number, maxM: number, width: number, u: number): number[] {
+function chooseTicks(minM: number, maxM: number, width: number, u: number, axisLeft: number): number[] {
   const span = maxM - minM;
   const targetPx = 90;
   // width is in viewBox units; a 12·u-unit label renders at 12 CSS px, so the per-tick
@@ -57,8 +57,8 @@ function chooseTicks(minM: number, maxM: number, width: number, u: number): numb
   const ticks: number[] = [];
   for (let m = start; m <= maxM; m += stepMin) {
     // drop ticks whose label would collide with the y-axis labels hugging PAD_LEFT
-    const xm = PAD_LEFT + ((m - minM) / (maxM - minM)) * (width - PAD_LEFT - PAD_RIGHT);
-    if (xm < PAD_LEFT + 30 * u) continue;
+    const xm = axisLeft + ((m - minM) / (maxM - minM)) * (width - axisLeft - PAD_RIGHT);
+    if (xm < axisLeft + 30 * u) continue;
     ticks.push(m);
   }
   return ticks;
@@ -93,10 +93,13 @@ export function CalmChart({
 
   const width = 800;
   const H = height;
-  const plotW = width - PAD_LEFT - PAD_RIGHT;
-  const plotH = H - PAD_TOP - PAD_BOTTOM;
   // viewBox units per rendered pixel — keeps SVG text at its CSS size on screen
   const u = renderedW !== null && renderedW > 0 ? Math.max(1, width / renderedW) : 1;
+  // left inset scales with u: the y-axis labels are 12 CSS px wide at every width,
+  // so the reserved gutter must grow with u too or they clip at the svg edge
+  const padLeft = Math.max(PAD_LEFT, PAD_LEFT * u);
+  const plotW = width - padLeft - PAD_RIGHT;
+  const plotH = H - PAD_TOP - PAD_BOTTOM;
 
   const nowMin = useMemo(
     () => minuteOfDay(nowIso ?? new Date().toISOString()),
@@ -119,8 +122,8 @@ export function CalmChart({
   }, [fullDay, samples, nowMin]);
 
   const x = useCallback(
-    (minute: number) => PAD_LEFT + ((minute - domain.min) / (domain.max - domain.min)) * plotW,
-    [domain, plotW],
+    (minute: number) => padLeft + ((minute - domain.min) / (domain.max - domain.min)) * plotW,
+    [domain, plotW, padLeft],
   );
   const y = useCallback((value: number) => PAD_TOP + (1 - value / 100) * plotH, [plotH]);
 
@@ -155,7 +158,7 @@ export function CalmChart({
     return `${path} L${x(visible[visible.length - 1].minute).toFixed(1)},${base} L${x(visible[0].minute).toFixed(1)},${base} Z`;
   }, [visible, path, x, plotH]);
 
-  const ticks = useMemo(() => chooseTicks(domain.min, domain.max, plotW, u), [domain, plotW, u]);
+  const ticks = useMemo(() => chooseTicks(domain.min, domain.max, plotW, u, padLeft), [domain, plotW, u, padLeft]);
   const activeIndex = hoverIndex ?? keyboardIndex;
   const active = activeIndex !== null ? visible[activeIndex] : null;
 
@@ -191,6 +194,11 @@ export function CalmChart({
   };
 
   const nowVisible = !fullDay && nowMin >= domain.min && nowMin <= domain.max;
+  const nowY = useMemo(() => {
+    if (visible.length === 0) return PAD_TOP + 3;
+    const nearest = visible.reduce((a, b) => (Math.abs(b.minute - nowMin) < Math.abs(a.minute - nowMin) ? b : a));
+    return y(nearest.value);
+  }, [visible, nowMin, y]);
 
   return (
     <div className={className} ref={wrapRef}>
@@ -252,9 +260,9 @@ export function CalmChart({
           </defs>
 
           {/* threshold bands */}
-          <rect x={PAD_LEFT} y={PAD_TOP} width={plotW} height={plotH * 0.3} fill="var(--calm)" opacity="0.08" />
+          <rect x={padLeft} y={PAD_TOP} width={plotW} height={plotH * 0.3} fill="var(--calm)" opacity="0.08" />
           <rect
-            x={PAD_LEFT}
+            x={padLeft}
             y={y(35)}
             width={plotW}
             height={plotH - (y(35) - PAD_TOP)}
@@ -265,19 +273,19 @@ export function CalmChart({
           {/* y gridlines + labels */}
           {[0, 35, 70, 100].map((v) => (
             <g key={v}>
-              <line x1={PAD_LEFT} y1={y(v)} x2={PAD_LEFT + plotW} y2={y(v)} stroke="var(--border)" strokeWidth={u} />
-              <text x={PAD_LEFT - 6} y={y(v) + 3} textAnchor="end" fontSize={12 * u} fill="var(--text-subtle)" className="tnum">
+              <line x1={padLeft} y1={y(v)} x2={padLeft + plotW} y2={y(v)} stroke="var(--border)" strokeWidth={u} />
+              <text x={padLeft - 6} y={y(v) + 3} textAnchor="end" fontSize={12 * u} fill="var(--text-subtle)" className="tnum">
                 {v}
               </text>
             </g>
           ))}
-          <text x={PAD_LEFT + plotW - 6 * u} textAnchor="end" y={y(85) + 3} fontSize={12 * u} fill="var(--calm-fg)">
+          <text x={padLeft + plotW - 6 * u} textAnchor="end" y={y(85) + 3} fontSize={12 * u} fill="var(--calm-fg)">
             Calm
           </text>
-          <text x={PAD_LEFT + plotW - 6 * u} textAnchor="end" y={y(50) + 3} fontSize={12 * u} fill="var(--text-subtle)">
+          <text x={padLeft + plotW - 6 * u} textAnchor="end" y={y(50) + 3} fontSize={12 * u} fill="var(--text-subtle)">
             Okay
           </text>
-          <text x={PAD_LEFT + plotW - 6 * u} textAnchor="end" y={y(15) + 3} fontSize={12 * u} fill="var(--stress-fg)">
+          <text x={padLeft + plotW - 6 * u} textAnchor="end" y={y(15) + 3} fontSize={12 * u} fill="var(--stress-fg)">
             Stressed
           </text>
 
@@ -337,7 +345,7 @@ export function CalmChart({
                 strokeWidth={1.5 * u}
                 strokeDasharray="2 3"
               />
-              <circle cx={x(nowMin)} cy={PAD_TOP + 3} r={2.5} fill="var(--primary)" />
+              <circle cx={x(nowMin)} cy={nowY} r={2.5 * u} fill="var(--primary)" />
             </g>
           ) : null}
 

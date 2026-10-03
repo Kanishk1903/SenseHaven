@@ -59,6 +59,18 @@ export async function findOverflow(page: Page): Promise<string[]> {
 };
     const out: string[] = [];
     const doc = document.documentElement;
+    // intra-SVG clipping: an SVG viewport clips by default, so text outside its own
+    // <svg> box is invisible to scrollWidth — compare each svg text to its svg's rect
+    document.querySelectorAll<SVGTextElement>("svg text").forEach((t) => {
+      const svg = t.closest("svg");
+      if (!svg) return;
+      const tr = t.getBoundingClientRect();
+      const sr = svg.getBoundingClientRect();
+      if (tr.width === 0 || sr.width === 0) return;
+      if (tr.left < sr.left - 0.5 || tr.right > sr.right + 0.5 || tr.top < sr.top - 0.5 || tr.bottom > sr.bottom + 0.5) {
+        out.push(`<text> "${(t.textContent || "").trim().slice(0, 24)}" is clipped by its svg viewport`);
+      }
+    });
     if (doc.scrollWidth > doc.clientWidth + 1) {
       out.push(`page scrolls horizontally (${doc.scrollWidth} > ${doc.clientWidth})`);
     }

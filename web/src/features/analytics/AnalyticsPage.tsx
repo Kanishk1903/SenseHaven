@@ -68,7 +68,7 @@ function EmotionTab() {
           <Button variant="outline" size="icon" aria-label="Previous day" onClick={() => setDate(shiftDate(date, -1))}>
             <ChevronLeft size={16} aria-hidden />
           </Button>
-          <span className="tnum text-secondary font-medium">{date}</span>
+          <span className="tnum text-secondary font-medium" data-nowrap>{date}</span>
           <Button
             variant="outline"
             size="icon"
@@ -132,7 +132,7 @@ function EmotionTab() {
               <ul className="space-y-2 text-secondary">
                 {stressEpisodes.map((session) => (
                   <li key={session.id} className="flex items-baseline justify-between gap-2">
-                    <span>
+                    <span className="shrink-0" data-nowrap>
                       {session.started_at ? new Date(session.started_at).toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "—"}
                     </span>
                     <span className="tnum text-caption text-text-muted">
