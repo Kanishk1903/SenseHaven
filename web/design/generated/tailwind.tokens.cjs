@@ -8,6 +8,8 @@ module.exports = {
     'surface-3': 'var(--surface-3)',
     'border': 'var(--border)',
     'border-strong': 'var(--border-strong)',
+    'rule': 'var(--rule)',
+    'rule-strong': 'var(--rule-strong)',
     'text': 'var(--text)',
     'text-muted': 'var(--text-muted)',
     'text-subtle': 'var(--text-subtle)',

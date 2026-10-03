@@ -7,6 +7,8 @@
   --surface-3: #E3DED2;
   --border: #DDD8CB;
   --border-strong: #BDB7A7;
+  --rule: #DDD8CB;
+  --rule-strong: #BDB7A7;
   --text: #1A1916;
   --text-muted: #5B574D;
   --text-subtle: #61667E;
@@ -89,6 +91,8 @@
   --surface-3: #26262B;
   --border: #2B2B30;
   --border-strong: #44444B;
+  --rule: #2B2B30;
+  --rule-strong: #44444B;
   --text: #EFECE4;
   --text-muted: #A8A498;
   --text-subtle: #8A90A8;

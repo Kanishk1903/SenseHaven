@@ -18,7 +18,7 @@ export function AuthLayout({ children, heading }: { children: React.ReactNode; h
         aria-hidden
         className="relative hidden flex-1 flex-col justify-end overflow-hidden bg-surface-2 p-12 lg:flex" data-scroll-x="decorative"
       >
-        <div className="absolute right-[-10%] top-[-15%] h-[520px] w-[520px] rounded-full bg-gradient-to-br from-calm-soft via-primary-soft to-surface-2" />
+        <div className="absolute right-[-10%] top-[-15%] h-[520px] w-[520px] rounded-full bg-calm-soft" />
         <div className="relative space-y-4">
           <OrbMark size={56} state="calm" />
           <p className="text-h2 font-semibold">Calm technology for families</p>

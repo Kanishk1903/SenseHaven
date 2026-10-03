@@ -17,8 +17,8 @@ export async function findOverlaps(page: Page): Promise<string[]> {
     const lab = (e: Element) =>
       `<${e.tagName.toLowerCase()}> "${(e.textContent || "").trim().slice(0, 30)}"`;
     const els = [
-      ...document.querySelectorAll<HTMLElement>(
-        "h1,h2,h3,h4,p,span,a,button,label,li,dt,dd,td,th,[data-nowrap]",
+      ...document.querySelectorAll<Element>(
+        "h1,h2,h3,h4,p,span,a,button,label,li,dt,dd,td,th,[data-nowrap],svg text",
       ),
     ].filter((el) => {
       const r = el.getBoundingClientRect();
@@ -153,17 +153,23 @@ export async function findTypeFloorViolations(page: Page): Promise<string[]> {
   return page.evaluate(() => {
     const issues: string[] = [];
     const seen = new Set<string>();
-    document.querySelectorAll<HTMLElement>("body *").forEach((el) => {
+    document.querySelectorAll<Element>("body *").forEach((el) => {
       const cs = getComputedStyle(el);
       if (cs.display === "none" || cs.visibility === "hidden") return;
       const hasText = [...el.childNodes].some((n) => n.nodeType === 3 && (n.textContent || "").trim());
       if (!hasText) return;
-      const size = parseFloat(cs.fontSize);
+      // SVG <text> inside a scaled viewBox: the rendered size is CSS size x CTM scale
+      let ctms = 1;
+      if (el instanceof SVGElement && "getScreenCTM" in el) {
+        const ctm = (el as SVGGraphicsElement).getScreenCTM();
+        if (ctm && ctm.a > 0) ctms = ctm.a;
+      }
+      const size = parseFloat(cs.fontSize) * ctms;
       if (size < 11.9) {
         const key = `${tag(el)}:${size}`;
         if (!seen.has(key)) {
           seen.add(key);
-          issues.push(`${tag(el)} renders at ${size}px (floor 12px)`);
+          issues.push(`${tag(el)} renders at ${size.toFixed(1)}px (floor 12px)`);
         }
       }
       const fs = parseFloat(cs.fontSize) || 16;

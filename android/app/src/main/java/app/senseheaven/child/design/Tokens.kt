@@ -11,6 +11,8 @@ object Tokens {
     val Surface3 = Color(0xFFE3DED2)
     val Border = Color(0xFFDDD8CB)
     val BorderStrong = Color(0xFFBDB7A7)
+    val Rule = Color(0xFFDDD8CB)
+    val RuleStrong = Color(0xFFBDB7A7)
     val Text = Color(0xFF1A1916)
     val TextMuted = Color(0xFF5B574D)
     val TextSubtle = Color(0xFF61667E)

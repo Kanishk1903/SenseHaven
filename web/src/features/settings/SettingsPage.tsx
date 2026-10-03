@@ -369,9 +369,9 @@ function NumberField({
 }) {
   return (
     <label className="block text-secondary">
-      {label}
+      <span className="block">{label}</span>
       <Input
-        className="mt-1 tnum w-28"
+        className="mt-1.5 tnum w-28"
         type="number"
         min={min}
         max={max}
@@ -420,6 +420,14 @@ function Toggle({
   );
 }
 
+const FRIENDLY_APPS = new Map<string, string>([
+  ["com.google.android.youtube", "YouTube"],
+  ["com.instagram.android", "Instagram"],
+  ["com.android.chrome", "Chrome"],
+  ["com.whatsapp", "WhatsApp"],
+  ["com.zhiliaoapp.musically", "TikTok"],
+]);
+
 function BlockedPackages({
   reported,
   value,
@@ -435,16 +443,20 @@ function BlockedPackages({
       {all.map((pkg) => {
         const blocked = value.includes(pkg);
         return (
-          <li key={pkg} className="flex items-center justify-between gap-3">
-            <span className="text-secondary">{pkg}</span>
-            <Button
-              size="sm"
-              variant={blocked ? "danger" : "outline"}
-              aria-pressed={blocked}
-              onClick={() => onChange(blocked ? value.filter((candidate) => candidate !== pkg) : [...value, pkg])}
-            >
-              {blocked ? "Blocked" : "Block"}
-            </Button>
+          <li key={pkg} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+            <span className="text-secondary">{FRIENDLY_APPS.get(pkg) ?? pkg}</span>
+            <span className="flex items-center gap-2">
+              {blocked ? (
+                <span className="rounded-chip bg-stress-soft px-2 py-0.5 text-caption font-medium text-stress-fg">Blocked</span>
+              ) : null}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onChange(blocked ? value.filter((candidate) => candidate !== pkg) : [...value, pkg])}
+              >
+                {blocked ? "Unblock" : "Block"}
+              </Button>
+            </span>
           </li>
         );
       })}

@@ -1,7 +1,7 @@
 /** Overview — "Quiet instrument" (v2 spec 4): answer-first status sentence, one raised Now
  *  panel, Today ledger with dotted leaders, day ribbon, Worth-a-look alerts, Top apps.
  *  Named grid areas (.overview-grid), min-width: 0 on every child, no absolute layout. */
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Lock, MoreHorizontal, Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -166,33 +166,10 @@ function AddTimePopover({ sessionId, queued = false }: { sessionId?: string; que
   );
 }
 
-function UpdatedLine({ lastSeenAt }: { lastSeenAt: string | null }) {
-  const [, force] = useState(0);
-  useEffect(() => {
-    const timer = setInterval(() => force((v) => v + 1), 5000);
-    return () => clearInterval(timer);
-  }, []);
-  const { text, stale } = humanAgo(lastSeenAt, Date.now());
-  return (
-    <p className="mt-5 flex flex-wrap items-center gap-2 text-caption">
-      <span className={`font-mono ${stale ? "text-neutral-fg" : "text-text-subtle"}`}>
-        Last checked in <span data-nowrap>{text}</span>
-      </span>
-      <span className="text-text-subtle">· Calm Index is an estimate</span>
-      {stale ? (
-        <button type="button" className="inline-flex min-h-11 items-center px-1 text-primary underline underline-offset-2 lg:min-h-6" onClick={() => window.location.reload()}>
-          Refresh
-        </button>
-      ) : null}
-    </p>
-  );
-}
-
 function NowPanel() {
   const { child } = useChild();
   const live = useLive(child?.id);
   const command = useSessionCommand(child?.id);
-  const alerts = useAlerts();
   const name = child?.name ?? "Your child";
 
   if (live.isPending) return <SkeletonCard lines={8} className="min-h-[300px]" />;
@@ -210,9 +187,6 @@ function NowPanel() {
   const offline = state.state === "offline";
   const active = state.state === "active";
   const lockedSession = state.state === "locked" && session !== null;
-  const lastStressAt =
-    alerts.data?.find((a) => a.kind === "stress_alert" && a.child_id === child?.id)?.created_at ?? null;
-  const sentence = statusSentence(state, name, lastStressAt);
   const fraction =
     session && session.granted_s + session.bonus_s > 0
       ? Math.max(0, Math.min(1, (state.remaining_s ?? 0) / (session.granted_s + session.bonus_s)))
@@ -261,10 +235,6 @@ function NowPanel() {
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="font-display text-h2 font-semibold text-text">
-            {sentence.h1}
-          </p>
-
           {state.calm_index ? (
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <span className="tnum font-display text-[1.75rem] font-semibold leading-8 text-text" data-nowrap>
@@ -303,10 +273,10 @@ function NowPanel() {
             <Lock size={16} aria-hidden /> Lock now
           </Button>
         ) : null}
-        {session && (active || state.state === "cooldown") ? <MoreMenu sessionId={session.id} name={name} /> : null}
         {session && state.state === "cooldown" ? (
           <LockButton sessionId={session.id} disabled={command.isPending} name={name} />
         ) : null}
+        {session && (active || state.state === "cooldown") ? <MoreMenu sessionId={session.id} name={name} /> : null}
         {(state.state === "locked" || state.state === "unpaired") ? <StartSessionButton /> : null}
       </div>
       {offline ? (
@@ -319,7 +289,6 @@ function NowPanel() {
         <p className="mt-2 text-caption text-text-subtle">A locked session can't be changed. Start a new session instead.</p>
       ) : null}
 
-      <UpdatedLine lastSeenAt={state.device?.last_seen_at ?? null} />
     </section>
   );
 }
@@ -600,6 +569,7 @@ export function OverviewPage() {
   const { child, select: selectChild } = useChild();
   const children = useChildren();
 
+  const alerts = useAlerts();
   const live = useLive(child?.id);
   const overview = useOverview(child?.id, "today");
   const timeline = useTimeline(child?.id, "2026-10-02");
@@ -623,7 +593,9 @@ export function OverviewPage() {
     }));
 
   const greeting = new Date().getHours() < 12 ? "Good morning" : new Date().getHours() < 18 ? "Good afternoon" : "Good evening";
-  const sentence = live.data ? statusSentence(live.data, child?.name ?? "Your child", null) : null;
+  const headerStressAt =
+    alerts.data?.find((a) => a.kind === "stress_alert" && a.child_id === child?.id)?.created_at ?? null;
+  const sentence = live.data ? statusSentence(live.data, child?.name ?? "Your child", headerStressAt) : null;
 
   return (
     <main
@@ -666,10 +638,19 @@ export function OverviewPage() {
               {sentence?.h1}
             </h1>
             <p className="mt-1 flex flex-wrap items-center gap-x-2 text-secondary text-text-muted">
-              <span className="font-mono">
-                Last checked in <span data-nowrap>{live.data ? humanAgo(live.data.device?.last_seen_at ?? null, Date.now()).text : "…"}</span>
+              <span className={`font-mono ${live.data && humanAgo(live.data.device?.last_seen_at ?? null, Date.now()).stale ? "text-neutral-fg" : "text-text-muted"}`}>
+                Last checked in <span data-nowrap>{live.data ? humanAgo(live.data.device?.last_seen_at ?? null, Date.now()).text : "…"} ·</span>
               </span>
-              <span>· Calm Index is an estimate</span>
+              <span className="text-text-subtle">Calm Index is an estimate</span>
+              {live.data && humanAgo(live.data.device?.last_seen_at ?? null, Date.now()).stale ? (
+                <button
+                  type="button"
+                  className="inline-flex min-h-11 items-center px-1 text-primary underline underline-offset-2 lg:min-h-6"
+                  onClick={() => window.location.reload()}
+                >
+                  Refresh
+                </button>
+              ) : null}
             </p>
             {children.data && children.data.length > 1 ? (
               <div className="mt-3 flex flex-wrap gap-2">

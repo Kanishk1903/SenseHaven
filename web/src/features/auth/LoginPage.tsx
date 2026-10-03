@@ -105,7 +105,7 @@ export function LoginPage() {
           </div>
         ) : null}
 
-        <Button type="submit" className="w-full" size="lg" disabled={isSubmitting || (rateLimited && countdown > 0)}>
+        <Button type="submit" className="w-full sm:w-auto sm:min-w-40" size="lg" disabled={isSubmitting || (rateLimited && countdown > 0)}>
           {isSubmitting ? "Signing in…" : "Sign in"}
         </Button>
         <p className="text-center text-secondary text-text-muted">

@@ -22,6 +22,17 @@ for (const media of MEDIA) {
     await page.waitForTimeout(1_000);
 
     if (media.name === "reduced-motion") {
+      // positive control first: the calm orb genuinely breathes under normal motion
+      const normal = await context.browser().newContext({ viewport: { width: 1440, height: 900 } });
+      const np = await normal.newPage();
+      await np.clock.setFixedTime(new Date("2026-10-02T23:10:00+05:30"));
+      await np.goto("/?fixture=live-calm");
+      await np.getByTestId("overview-ready").waitFor();
+      await np.waitForTimeout(500);
+      const running = await np.evaluate(() => document.getAnimations().length);
+      await normal.close();
+      expect(running, "orb breathe loop should run under normal motion").toBeGreaterThan(0);
+
       const animations = await page.evaluate(() => document.getAnimations().map((a) => a.constructor.name));
       expect(animations, "running animations under prefers-reduced-motion").toEqual([]);
     }

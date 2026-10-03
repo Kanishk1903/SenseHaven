@@ -2,7 +2,7 @@
  * v2 propagation matrix (UI-UX v2 spec §6.4): every parent-dashboard screen runs the
  * same G-checks in both themes at 320 / 768 / 1440, using the fixture harness for data.
  */
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
 import { findOverlaps, findOverflow, findWrappedNoWrap, findSmallTargets, copyLint, findTypeFloorViolations } from "./checks";
@@ -26,9 +26,9 @@ for (const theme of THEMES) {
         const logs: string[] = [];
         page.on("console", (m) => {
           if (!["error", "warning"].includes(m.type())) return;
-          // the /login route runs without fixtures: its auth probe 500s against the
-          // API-less preview server (harness artifact, not a page defect)
-          if (m.location()?.url?.includes("/api/")) return;
+          // /login runs without fixtures: its auth probe 500s against the API-less
+          // preview server (harness artifact, not a page defect) — exempted ONLY there
+          if (route.bare && m.location()?.url?.includes("/api/")) return;
           logs.push(m.text());
         });
         page.on("pageerror", (e) => logs.push(String(e)));
@@ -54,7 +54,7 @@ for (const theme of THEMES) {
         expect.soft(await findTypeFloorViolations(page), "G14 type floor").toEqual([]);
 
         const root = page.locator("main").first();
-        expect.soft(copyLint(await root.innerText().catch(() => "")), "G9 copy lint").toEqual([]);
+        expect.soft(copyLint(await root.innerText()), "G9 copy lint").toEqual([]);
 
         const axe = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
         expect.soft(
