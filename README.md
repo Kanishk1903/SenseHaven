@@ -21,6 +21,13 @@ docker compose up -d db
 make gate-0            # verification gate for the current phase
 ```
 
+### Child-app model file
+
+The Android app loads the MediaPipe Face Landmarker from
+`android/app/src/main/assets/face_landmarker.task` (committed, ~3.8 MB). If you wipe it,
+re-download the "Face Landmarker (task)" bundle from Google MediaPipe models and place it
+at that exact path before building the APK.
+
 ## Layout
 
 | Path | What |
