@@ -4,6 +4,7 @@ import { Link, NavLink, Navigate, Outlet, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { OrbMark } from "@/components/OrbMark";
+import { BrandMark } from "@/components/BrandMark";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAlerts } from "@/features/apiHooks";
 import { useChildren, useLogout, useMe } from "@/lib/queries";
@@ -174,7 +175,7 @@ export function Shell() {
           <Menu size={20} aria-hidden />
         </button>
         <span className="flex min-w-0 items-center gap-2 font-semibold">
-          <OrbMark size={22} />
+          <BrandMark size={22} />
           <span className="truncate" title="SenseHeaven" data-allow-truncate>SenseHeaven</span>
         </span>
         <Link
@@ -210,7 +211,7 @@ export function Shell() {
           <div>
             <div className="mb-4 flex flex-col items-center gap-1 lg:flex-row lg:justify-between">
               <Link to="/" className="flex min-h-11 w-11 items-center justify-center gap-2 px-2 py-1 font-semibold lg:min-h-9 lg:w-auto">
-                <OrbMark size={24} />
+                <BrandMark size={24} />
                 <span className="sr-only lg:hidden">SenseHeaven</span>
                 <span className={cn("hidden lg:inline", collapsed && "sr-only")}>SenseHeaven</span>
               </Link>
