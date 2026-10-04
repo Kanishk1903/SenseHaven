@@ -2,6 +2,7 @@
  *  is coloured by mood (OKLCH interpolation calm → neutral → stress), a 2px Calm Index line
  *  over it, hatched gap regions, session brackets and breather markers below, adaptive time
  *  axis, and a Now marker. Auto-zooms to the active window with a Full-day toggle. */
+import { ChevronDown } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { cn } from "@/lib/cn";
@@ -49,6 +50,11 @@ function fmtTick(minute: number): string {
   return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
+/** State vocabulary shared with the chips (calm ≥ 70 · stressed < 35). */
+function stateName(value: number): string {
+  return value >= 70 ? "Calm" : value < 35 ? "Stressed" : "Neutral";
+}
+
 export function DayRibbon({
   buckets,
   episodes = [],
@@ -60,6 +66,7 @@ export function DayRibbon({
   ariaLabel = "Calm Index ribbon for today",
 }: Props) {
   const [fullDay, setFullDay] = useState(!autoZoom);
+  const [inspect, setInspect] = useState<{ minute: number; value: number } | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const [renderedW, setRenderedW] = useState<number | null>(null);
   useEffect(() => {
@@ -152,6 +159,46 @@ const H = Math.round((STRIP_H + BRACKET_H + AXIS_H) * u);
 
   const nowVisible = nowMin >= domain.min && nowMin <= domain.max;
 
+  // inspection: hover or arrow keys pick the nearest reading; the crosshair + card
+  // read out time · value · state (spec 4.6). Cleared when the domain changes.
+  useEffect(() => setInspect(null), [fullDay]);
+  const inspectAt = (clientX: number) => {
+    const rect = wrapRef.current?.getBoundingClientRect();
+    if (!rect || visible.length === 0) return;
+    const unitX = ((clientX - rect.left) / rect.width) * W;
+    const span = domain.max - domain.min;
+    const minute = domain.min + ((unitX - PAD_X) / (W - 2 * PAD_X)) * span;
+    const nearest = visible.reduce((a, b) => (Math.abs(b.minute - minute) < Math.abs(a.minute - minute) ? b : a));
+    setInspect({ minute: nearest.minute, value: nearest.value });
+  };
+  const inspectStep = (direction: 1 | -1) => {
+    if (visible.length === 0) return;
+    const idx = inspect ? visible.findIndex((s) => s.minute === inspect.minute) : -1;
+    const base = idx === -1 ? (direction === 1 ? -1 : visible.length) : idx;
+    const next = visible[Math.min(visible.length - 1, Math.max(0, base + direction))]!;
+    setInspect({ minute: next.minute, value: next.value });
+  };
+
+  // hourly averages for the "View as table" disclosure (spec 4.6)
+  const hourly = useMemo(() => {
+    const byHour = new Map<number, { sum: number; n: number }>();
+    for (const s of visible) {
+      const h = Math.floor(s.minute / 60);
+      const row = byHour.get(h) ?? { sum: 0, n: 0 };
+      row.sum += s.value;
+      row.n += 1;
+      byHour.set(h, row);
+    }
+    return [...byHour.entries()]
+      .sort((a, b) => a[0] - b[0])
+      .map(([h, { sum, n }]) => ({
+        hour: h,
+        label: `${h % 12 === 0 ? 12 : h % 12} ${h < 12 ? "AM" : "PM"}`,
+        avg: Math.round(sum / n),
+        n,
+      }));
+  }, [visible]);
+
   return (
     <section aria-label={ariaLabel} className={cn("w-full", className)}>
       <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
@@ -178,8 +225,29 @@ const H = Math.round((STRIP_H + BRACKET_H + AXIS_H) * u);
         </div>
       </div>
 
-      {/* markers are HTML hotspots over the strip (absolute allowed for markers, spec 5.1) */}
-      <div className="relative w-full" ref={wrapRef}>
+      {/* markers are HTML hotspots over the strip (absolute allowed for markers, spec 5.1);
+          the strip itself inspects: hover for the crosshair card, arrow keys to step readings */}
+      <div
+        className="relative w-full cursor-crosshair"
+        ref={wrapRef}
+        tabIndex={0}
+        role="group"
+        aria-label={`${ariaLabel}. Use the left and right arrow keys to inspect readings.`}
+        onPointerMove={(e) => inspectAt(e.clientX)}
+        onPointerLeave={() => setInspect(null)}
+        onKeyDown={(e) => {
+          if (e.key === "ArrowRight") {
+            e.preventDefault();
+            inspectStep(1);
+          } else if (e.key === "ArrowLeft") {
+            e.preventDefault();
+            inspectStep(-1);
+          }
+        }}
+      >
+        <span role="status" className="sr-only">
+          {inspect ? `${fmtTick(inspect.minute)} — Calm Index ${inspect.value}, ${stateName(inspect.value)}` : ""}
+        </span>
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="block w-full"
@@ -257,6 +325,21 @@ const H = Math.round((STRIP_H + BRACKET_H + AXIS_H) * u);
           </g>
         ) : null}
 
+        {/* inspection crosshair + read-out dot (only while hovering or arrow-stepping) */}
+        {inspect ? (
+          <g aria-hidden>
+            <line x1={x(inspect.minute)} y1={0} x2={x(inspect.minute)} y2={STRIP_H * u} stroke="var(--text)" strokeWidth={u} opacity={0.5} />
+            <circle
+              cx={x(inspect.minute)}
+              cy={(STRIP_H / 2 - ((inspect.value - 50) / 100) * (STRIP_H - 12)) * u}
+              r={3.5 * u}
+              fill="var(--surface)"
+              stroke="var(--text)"
+              strokeWidth={1.5 * u}
+            />
+          </g>
+        ) : null}
+
         {/* axis */}
         <line x1={PAD_X} y1={STRIP_H * u + 10 * u} x2={W - PAD_X} y2={STRIP_H * u + 10 * u} stroke="var(--rule)" />
         {ticks.map((m) => {
@@ -274,6 +357,24 @@ const H = Math.round((STRIP_H + BRACKET_H + AXIS_H) * u);
           );
         })}
       </svg>
+      {/* read-out card for the inspected reading (tooltips are sanctioned absolute content) */}
+      {inspect ? (
+        <div
+          className="pointer-events-none absolute z-10 -translate-x-1/2 rounded-control border border-border bg-surface px-2.5 py-1.5 shadow-elev2"
+          style={{ left: `${Math.min(88, Math.max(12, (x(inspect.minute) / W) * 100))}%`, bottom: "calc(100% - 4px)" }}
+        >
+          <p className="tnum font-mono text-caption text-text-subtle" data-nowrap>
+            {fmtTick(inspect.minute)}
+          </p>
+          <p className="flex items-baseline gap-1.5" data-nowrap>
+            <span className="tnum font-display text-body font-semibold text-text">{inspect.value}</span>
+            <span className="inline-flex items-center gap-1 text-caption text-text-muted">
+              <span aria-hidden className="h-2 w-2 rounded-pill" style={{ background: moodColour(inspect.value) }} />
+              {stateName(inspect.value)}
+            </span>
+          </p>
+        </div>
+      ) : null}
       <div className="absolute inset-x-0 top-0" style={{ height: 56 }}>
         {[...episodes, ...breathers].map((marker) => {
           const m = minuteOfDay(marker.t);
@@ -309,6 +410,36 @@ const H = Math.round((STRIP_H + BRACKET_H + AXIS_H) * u);
             );
           })}
         </div>
+      ) : null}
+
+      {/* accessible alternative: the same data as an hour-by-hour table (spec 4.6) */}
+      {hourly.length > 0 ? (
+        <details className="mt-1">
+          <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1 text-secondary hover:text-text lg:min-h-6 [&::-webkit-details-marker]:hidden">
+            <ChevronDown size={14} aria-hidden /> View as table
+          </summary>
+          <div className="mt-2 overflow-x-auto" data-scroll-x>
+            <table className="w-full text-left text-secondary">
+              <caption className="sr-only">Hourly Calm Index averages for the visible window</caption>
+              <thead>
+                <tr>
+                  <th scope="col" className="py-1 pr-6 text-caption font-medium text-text-subtle">Hour</th>
+                  <th scope="col" className="py-1 pr-6 text-caption font-medium text-text-subtle">Average calm</th>
+                  <th scope="col" className="py-1 text-caption font-medium text-text-subtle">Readings</th>
+                </tr>
+              </thead>
+              <tbody>
+                {hourly.map((row) => (
+                  <tr key={row.hour} className="border-t border-[var(--rule)]">
+                    <td className="tnum py-1 pr-6 font-mono text-caption">{row.label}</td>
+                    <td className="tnum py-1 pr-6 font-display font-semibold">{row.avg}</td>
+                    <td className="tnum py-1 text-caption text-text-muted">{row.n}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </details>
       ) : null}
     </section>
   );
