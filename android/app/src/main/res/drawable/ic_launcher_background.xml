@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Dusk gradient background (File 02 §2.6) -->
+<!-- Launcher background: the icon's near-black tile (lens-heart mark, adopted 2026-10) -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <gradient android:startColor="#1B2350" android:endColor="#3D4FA8" android:angle="270" />
+    <solid android:color="#07070F" />
 </shape>

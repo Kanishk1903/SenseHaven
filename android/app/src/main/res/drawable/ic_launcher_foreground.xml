@@ -1,15 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The mood orb motif (File 02 §1) -->
+<!-- Lens-heart mark (adopted 2026-10): camera lens ring with a heart at its centre.
+     Geometry is the 64-unit source canvas, centred on the 108dp adaptive tile and
+     scaled 1.16 so the ring (r=29dp) sits inside the 66dp safe zone. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path
-        android:pathData="M54,54m-22,0a22,22 0,1 1,44 0a22,22 0,1 1,-44 0"
-        android:fillColor="#9AA8FF" />
-    <path
-        android:pathData="M46,46m-7,0a7,7 0,1 1,14 0a7,7 0,1 1,-14 0"
-        android:fillColor="#F2F3FF"
-        android:fillAlpha="0.5" />
+    <group android:translateX="16.88" android:translateY="16.88">
+        <group android:scaleX="1.16" android:scaleY="1.16" android:pivotX="32" android:pivotY="32">
+            <!-- lens ring: fuchsia → indigo → cyan -->
+            <path android:pathData="M7,32 a25,25 0 1,0 50,0 a25,25 0 1,0 -50,0">
+                <aapt:attr xmlns:aapt="http://schemas.android.com/aapt" name="android:fillColor">
+                    <gradient android:type="linear"
+                        android:startX="7" android:startY="7" android:endX="57" android:endY="57">
+                        <stop android:offset="0" android:color="#F0ABFC" />
+                        <stop android:offset="0.5" android:color="#6366F1" />
+                        <stop android:offset="1" android:color="#22D3EE" />
+                    </gradient>
+                </aapt:attr>
+            </path>
+            <!-- barrel -->
+            <path android:pathData="M11,32 a21,21 0 1,0 42,0 a21,21 0 1,0 -42,0"
+                android:fillColor="#0B0B18" />
+            <!-- glass -->
+            <path android:pathData="M14,32 a18,18 0 1,0 36,0 a18,18 0 1,0 -36,0">
+                <aapt:attr xmlns:aapt="http://schemas.android.com/aapt" name="android:fillColor">
+                    <gradient android:type="radial"
+                        android:centerX="32" android:centerY="32" android:gradientRadius="21.6">
+                        <stop android:offset="0" android:color="#312E81" />
+                        <stop android:offset="1" android:color="#050510" />
+                    </gradient>
+                </aapt:attr>
+            </path>
+            <!-- heart -->
+            <group android:translateY="-2.2">
+                <path android:pathData="M32,43.5 C22,36.5 24.6,27.6 29.4,29.1 C31,29.6 32,31.4 32,31.4 C32,31.4 33,29.6 34.6,29.1 C39.4,27.6 42,36.5 32,43.5 Z">
+                    <aapt:attr xmlns:aapt="http://schemas.android.com/aapt" name="android:fillColor">
+                        <gradient android:type="linear"
+                            android:startX="32" android:startY="29.1" android:endX="32" android:endY="43.5">
+                            <stop android:offset="0" android:color="#FDA4AF" />
+                            <stop android:offset="1" android:color="#F43F5E" />
+                        </gradient>
+                    </aapt:attr>
+                </path>
+            </group>
+            <!-- specular arc + sparkle -->
+            <path android:pathData="M19.5,26 A14,14 0 0,1 28,18.5"
+                android:strokeColor="#FFFFFF" android:strokeAlpha="0.7"
+                android:strokeWidth="2.4" android:strokeLineCap="round"
+                android:fillColor="#00000000" />
+            <path android:pathData="M45,42.5 m-1.6,0 a1.6,1.6 0 1,0 3.2,0 a1.6,1.6 0 1,0 -3.2,0"
+                android:fillColor="#FFFFFF" android:fillAlpha="0.6" />
+        </group>
+    </group>
 </vector>
