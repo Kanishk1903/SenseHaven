@@ -201,8 +201,13 @@ const H = Math.round((STRIP_H + BRACKET_H + AXIS_H) * u);
 
   return (
     <section aria-label={ariaLabel} className={cn("w-full", className)}>
-      <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
-        <p className="text-caption text-text-subtle">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <p className="flex items-center gap-1.5 text-caption text-text-subtle">
+          <svg aria-hidden width="14" height="14" className="rounded-[3px] border border-[var(--rule)]">
+            <rect width="14" height="14" fill="var(--surface-2)" />
+            <line x1="3" y1="10" x2="10" y2="3" stroke="var(--rule-strong)" strokeWidth="1.6" />
+            <line x1="7" y1="13" x2="14" y2="6" stroke="var(--rule-strong)" strokeWidth="1.6" />
+          </svg>
           Hatched = no readings. We never guess between samples.
         </p>
         <div className="flex items-center gap-0.5 rounded-control bg-surface-3 p-0.5 text-caption">
@@ -262,7 +267,7 @@ const H = Math.round((STRIP_H + BRACKET_H + AXIS_H) * u);
         </defs>
 
         {/* strip background */}
-        <rect x={PAD_X} y={0} width={W - 2 * PAD_X} height={STRIP_H * u} rx={4} fill="var(--surface-2)" />
+        <rect x={PAD_X} y={0} width={W - 2 * PAD_X} height={STRIP_H * u} rx={6} fill="var(--surface-2)" />
 
         {/* mood cells / gaps */}
         {cells.map((cell, i) =>
@@ -275,11 +280,11 @@ const H = Math.round((STRIP_H + BRACKET_H + AXIS_H) * u);
 
         {/* exact-value line */}
         {linePath ? (
-          <path d={linePath} fill="none" stroke="var(--text)" strokeWidth={2 * u} opacity="0.85" />
+          <path d={linePath} fill="none" stroke="var(--text)" strokeWidth={2.25 * u} opacity="0.9" strokeLinecap="round" strokeLinejoin="round" />
         ) : null}
 
         {/* rim */}
-        <rect x={PAD_X} y={0.5} width={W - 2 * PAD_X} height={STRIP_H * u} rx={4} fill="none" stroke="var(--rule)" />
+        <rect x={PAD_X} y={0.5} width={W - 2 * PAD_X} height={STRIP_H * u} rx={6} fill="none" stroke="var(--rule)" />
 
         {/* stress episode flags (decorative; the HTML hotspots carry semantics) */}
         {episodes.map((marker) => {
@@ -318,7 +323,7 @@ const H = Math.round((STRIP_H + BRACKET_H + AXIS_H) * u);
         {/* now marker */}
         {nowVisible ? (
           <g>
-            <line x1={x(nowMin)} y1={0} x2={x(nowMin)} y2={STRIP_H * u} stroke="var(--primary)" strokeWidth={1.5 * u} />
+            <line x1={x(nowMin)} y1={0} x2={x(nowMin)} y2={STRIP_H * u} stroke="var(--primary)" strokeWidth={1.5 * u} strokeLinecap="round" />
             <text x={x(nowMin)} y={STRIP_H * u + 24 * u} textAnchor="middle" fontSize={12 * u} fill="var(--primary)">
               Now
             </text>

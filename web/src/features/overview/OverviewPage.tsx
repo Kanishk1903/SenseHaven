@@ -688,15 +688,25 @@ export function OverviewPage() {
             </div>
 
             <div className="area-ribbon">
-              {insight ? (
-                <p className="mb-2 text-secondary text-text">{insight}</p>
-              ) : null}
-              <DayRibbon
-                buckets={buckets}
-                episodes={episodes}
-                sessions={brackets}
-                ariaLabel="Calm Index ribbon for today"
-              />
+              <section
+                aria-label="Calm Index analysis"
+                className="rounded-panel border border-border bg-surface p-5"
+              >
+                <p className="text-caption font-medium tracking-wide text-text-subtle">The shape of the day</p>
+                {insight ? (
+                  <p className="mt-1 font-display text-h3 font-semibold text-text">
+                    {insight}
+                  </p>
+                ) : null}
+                <div className="mt-3">
+                  <DayRibbon
+                    buckets={buckets}
+                    episodes={episodes}
+                    sessions={brackets}
+                    ariaLabel="Calm Index ribbon for today"
+                  />
+                </div>
+              </section>
             </div>
           </div>
         </>
