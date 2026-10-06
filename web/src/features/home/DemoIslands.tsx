@@ -62,6 +62,22 @@ export function DemoPanel() {
   return <NowPanelView state={DEMO_STATES[state]} />;
 }
 
+/** The hero demo: headline + panel + controls, one store-driven island (spec §4.2). */
+export function DemoNow() {
+  return (
+    <div>
+      <div className="relative">
+        <DemoHeadline />
+        <DemoPanel />
+      </div>
+      <DemoControls />
+      <p className="mt-2 text-caption text-text-subtle">
+        Sample panel. Sample data — nothing here is a real child. Buttons do nothing here.
+      </p>
+    </div>
+  );
+}
+
 /** the state switcher + pause control */
 export function DemoControls() {
   const { state, auto } = useDemoStore();

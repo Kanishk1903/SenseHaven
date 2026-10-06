@@ -11,10 +11,26 @@ const RIBBON_FALLBACK_H = 96;
 
 import { OrbMark } from "@/components/OrbMark";
 import { StatusChip } from "@/components/StatusChip";
-import { NowPanelView } from "@/components/now/NowPanelView";
 import { HomeLayout } from "@/features/home/HomeLayout";
-import { DEMO_STATES, SAMPLE_DAY, SAMPLE_NOTES } from "@/features/home/data";
+import { DemoControls, DemoHeadline, DemoPanel } from "@/features/home/DemoIslands";
+import { SAMPLE_DAY, SAMPLE_NOTES } from "@/features/home/data";
 import { cn } from "@/lib/cn";
+
+/** The hero demo: the real Now panel fed by sample states via the shared store (spec §4.2). */
+function DemoNow() {
+  return (
+    <div>
+      <div className="relative">
+        <DemoHeadline />
+        <DemoPanel />
+      </div>
+      <DemoControls />
+      <p className="mt-2 text-caption text-text-subtle">
+        Sample panel. Sample data — nothing here is a real child. Buttons do nothing here.
+      </p>
+    </div>
+  );
+}
 
 function usePrefersReducedMotion(): boolean {
   const [reduced, setReduced] = useState(false);
@@ -330,19 +346,8 @@ export function HomePage() {
                 Android · Limits hold even when the phone is offline
               </p>
             </div>
-            <div>
-              <div id="demo-headline">
-                <p className="mb-2 text-caption text-text-subtle" role="status">
-                  Aarav is calm. 22 min left in this session.
-                </p>
-              </div>
-              <div id="demo-panel">
-                <NowPanelView state={DEMO_STATES["live-calm"]} />
-              </div>
-              <div id="demo-controls" />
-              <p className="mt-2 text-caption text-text-subtle">
-                Sample panel. Sample data — nothing here is a real child. Buttons do nothing here.
-              </p>
+            <div id="demo-root">
+              <DemoNow />
             </div>
           </div>
         </section>
