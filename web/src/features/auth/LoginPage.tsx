@@ -1,5 +1,4 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
@@ -22,7 +21,6 @@ export function LoginPage() {
   const { data: me } = useMe();
   const [serverError, setServerError] = useState<{ message: string; code: string; retryAfter: number | null } | null>(null);
   const [countdown, setCountdown] = useState(0);
-  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -64,7 +62,6 @@ export function LoginPage() {
 
   return (
     <AuthLayout heading="Welcome back">
-      <p className="mt-2 text-secondary text-text-muted">Sign in to see how things are going.</p>
       <form
         className="mt-6 space-y-4"
         onSubmit={handleSubmit(onSubmit)}
@@ -85,45 +82,26 @@ export function LoginPage() {
             <p id="login-email-error" className="mt-1 text-caption text-stress-fg">{errors.email.message}</p>
           ) : null}
         </label>
-        <div className="block text-secondary">
-          <label htmlFor="login-password" className="block">Password</label>
-          <span className="relative mt-1 block">
-            <Input
-              id="login-password"
-              className="pr-12"
-              type={showPassword ? "text" : "password"}
-              autoComplete="current-password"
-              aria-invalid={Boolean(errors.password)}
-              aria-describedby={errors.password ? "login-password-error" : "login-password-hint"}
-              {...register("password")}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((value) => !value)}
-              aria-pressed={showPassword}
-              aria-label={showPassword ? "Hide password" : "Show password"}
-              className="absolute right-1 top-1/2 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-control text-text-muted hover:text-text"
-            >
-              {showPassword ? <EyeOff size={16} aria-hidden /> : <Eye size={16} aria-hidden />}
-            </button>
-          </span>
-          <span id="login-password-hint" className="sr-only">The code you chose when you created your account.</span>
+        <label className="block text-secondary">
+          Password
+          <Input
+            className="mt-1"
+            type="password"
+            autoComplete="current-password"
+            aria-invalid={Boolean(errors.password)}
+            aria-describedby={errors.password ? "login-password-error" : undefined}
+            {...register("password")}
+          />
           {errors.password ? (
             <p id="login-password-error" className="mt-1 text-caption text-stress-fg">{errors.password.message}</p>
           ) : null}
-        </div>
+        </label>
 
         {serverError ? (
-          <div role="alert" className="flex items-start gap-2 rounded-control bg-stress-soft px-3 py-2 text-secondary text-stress-fg">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="mt-0.5 shrink-0">
-              <path d="M12 4l9 16H3z" />
-              <path d="M12 11v4 M12 18h.01" />
-            </svg>
-            <span>
-              {rateLimited && countdown > 0
-                ? `${serverError.message} You can try again in ${countdown} s.`
-                : serverError.message}
-            </span>
+          <div role="alert" className="rounded-control bg-stress-soft px-3 py-2 text-secondary text-stress-fg">
+            {rateLimited && countdown > 0
+              ? `${serverError.message} You can try again in ${countdown} s.`
+              : serverError.message}
           </div>
         ) : null}
 
