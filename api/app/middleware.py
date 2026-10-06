@@ -5,9 +5,14 @@ from starlette.responses import Response
 
 from .config import Settings
 
-CSP = ("default-src 'self'; script-src 'self' 'sha256-p6pQNuF9Y22V3Uy6QgJaJliL9xWiyWKkBdP5gOkx1/M=' 'sha256-qmDYHsvQtl4SIstx1bCCYTQdTu++NZnfxwMcENTH4l4='; "
-      "img-src 'self' data:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; "
-      "connect-src 'self'; frame-ancestors 'none'")
+_HOME_SCRIPT = "sha256-qmDYHsvQtl4SIstx1bCCYTQdTu++NZnfxwMcENTH4l4="
+_APP_SCRIPT = "sha256-p6pQNuF9Y22V3Uy6QgJaJliL9xWiyWKkBdP5gOkx1/M="
+CSP = (
+    "default-src 'self'; "
+    f"script-src 'self' '{_APP_SCRIPT}' '{_HOME_SCRIPT}'; "
+    "img-src 'self' data:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; "
+    "connect-src 'self'; frame-ancestors 'none'"
+)
 
 
 class RequestIdMiddleware(BaseHTTPMiddleware):

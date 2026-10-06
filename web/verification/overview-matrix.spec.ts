@@ -25,7 +25,7 @@ async function openFixture(page: Page, fixture: string, theme: string, vp: { wid
   await page.setViewportSize(vp);
   await page.clock.setFixedTime(new Date("2026-10-02T23:10:00+05:30"));
   await page.addInitScript((t) => localStorage.setItem("sh-theme", t), theme);
-  await page.goto(`/?fixture=${fixture}`);
+  await page.goto(`/app?fixture=${fixture}`);
   await page.getByTestId(fixture === "loading" ? "overview-loading" : "overview-ready").waitFor();
   return logs;
 }

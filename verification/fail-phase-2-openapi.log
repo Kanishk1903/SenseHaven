@@ -1,0 +1,12 @@
+cd api && PYTHONPATH=.. .venv/bin/python -W ignore -c "import json; from api.app.main import create_app; print(json.dumps(create_app().openapi(), indent=2))" > ../contracts/openapi.json
+WARNING: using development defaults for: database_url, app_secret, pairing_pepper (ENV=development); copy .env.example to .env for real values
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/Users/kanishkgupta/Desktop/aakhribaar_glm/api/app/main.py", line 72, in <module>
+    app = create_app()
+          ^^^^^^^^^^^^
+  File "/Users/kanishkgupta/Desktop/aakhribaar_glm/api/app/main.py", line 48, in create_app
+    app.add_middleware(GZipMiddleware, minimum_size=1024)
+                       ^^^^^^^^^^^^^^
+NameError: name 'GZipMiddleware' is not defined
+make[1]: *** [contract-export] Error 1

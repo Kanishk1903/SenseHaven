@@ -2,7 +2,8 @@ PASS layout
 PASS doctor
 PASS db
 FAIL placeholders (exit 1) — last lines:
-    ./android/app/src/main/java/app/senseheaven/child/services/GuardService.kt:333:        // quality: face size + luma (FACE_TODO: bbox from landmarks; approximate via frame luma)
+    ./web/scripts/check-home-build.mjs:14:  [/\bTODO\b/, "TODO placeholder"],
+    ./web/scripts/check-home-build.mjs:26:console.log("H18 guard: home output clean (no CONFIRM/lorem/TODO/placeholder-price)");
     no_placeholders: FAIL (hits above)
 PASS gitignore
 PASS runner

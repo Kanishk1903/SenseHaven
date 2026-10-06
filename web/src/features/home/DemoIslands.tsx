@@ -19,6 +19,7 @@ const STATE_LABELS: Record<DemoStateName, string> = {
   "live-stressed": "Stressed",
 };
 
+// eslint-disable-next-line react-refresh/only-export-components -- media-query hook shared by the islands
 export function usePrefersReducedMotion(): boolean {
   const [reduced, setReduced] = useState(false);
   useEffect(() => {

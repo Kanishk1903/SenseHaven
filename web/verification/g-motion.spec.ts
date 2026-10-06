@@ -17,7 +17,7 @@ for (const media of MEDIA) {
     });
     const page = await context.newPage();
     await page.clock.setFixedTime(new Date("2026-10-02T23:10:00+05:30"));
-    await page.goto("/?fixture=live-calm");
+    await page.goto("/app?fixture=live-calm");
     await page.getByTestId("overview-ready").waitFor();
     await page.waitForTimeout(1_000);
 
@@ -26,7 +26,7 @@ for (const media of MEDIA) {
       const normal = await context.browser().newContext({ viewport: { width: 1440, height: 900 } });
       const np = await normal.newPage();
       await np.clock.setFixedTime(new Date("2026-10-02T23:10:00+05:30"));
-      await np.goto("/?fixture=live-calm");
+      await np.goto("/app?fixture=live-calm");
       await np.getByTestId("overview-ready").waitFor();
       await np.waitForTimeout(500);
       const running = await np.evaluate(() => document.getAnimations().length);
@@ -39,10 +39,10 @@ for (const media of MEDIA) {
 
     for (const theme of ["light", "dark"] as const) {
       await page.evaluate((t) => localStorage.setItem("sh-theme", t), theme);
-      await page.goto("/?fixture=live-calm");
+      await page.goto("/app?fixture=live-calm");
       await page.getByTestId("overview-ready").waitFor();
       await page.screenshot({ path: `../verification/shots/live-calm-${theme}-${media.name}-1440.png`, fullPage: true });
-      await page.goto("/?fixture=offline");
+      await page.goto("/app?fixture=offline");
       await page.getByTestId("overview-ready").waitFor();
       await page.screenshot({ path: `../verification/shots/offline-${theme}-${media.name}-1440.png`, fullPage: true });
     }

@@ -9,7 +9,7 @@ import { findOverlaps, findOverflow, findWrappedNoWrap } from "./checks";
 test("G11 · long-strings at 320px with 200% text zoom passes G1–G3", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 844 });
   await page.clock.setFixedTime(new Date("2026-10-02T23:10:00+05:30"));
-  await page.goto("/?fixture=long-strings");
+  await page.goto("/app?fixture=long-strings");
   await page.getByTestId("overview-ready").waitFor();
 
   // 200% text zoom (spec §8.2)

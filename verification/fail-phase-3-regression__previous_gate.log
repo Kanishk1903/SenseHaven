@@ -1,40 +1,22 @@
-        -  --surface-2: #1B1F2E;
-        -  --surface-3: #232840;
-        -  --border: #272C3F;
-        -  --border-strong: #3A4160;
-        -  --text: #ECEEF6;
-        -  --text-muted: #A4A9BE;
-        +  --bg: #0E0E10;
-        +  --surface: #17171A;
-        +  --surface-2: #1F1F23;
-        +  --surface-3: #26262B;
-        +  --border: #2B2B30;
-        +  --border-strong: #44444B;
-        +  --text: #EFECE4;
-        +  --text-muted: #A8A498;
-           --text-subtle: #8A90A8;
-        -  --primary: #8B97FF;
-        +  --primary: #8E98FF;
-           --primary-hover: #A3ACFF;
-        -  --primary-soft: #1E2447;
-        -  --on-primary: #0C0E14;
-        +  --primary-soft: #1E2047;
-        +  --on-primary: #0E0E10;
-           --calm: #3CCB9B;
-           --calm-fg: #7BE3C0;
-           --calm-soft: #10302A;
-        @@ -97,7 +99,7 @@
-           --info-fg: #B5BDFF;
-           --info-soft: #1E2447;
-           --scrim: rgba(0,0,0,0.6);
-        -  --elev-1: 0 0 0 1px #272C3F;
-        -  --elev-2: 0 8px 24px rgba(0,0,0,.45), 0 0 0 1px #3A4160;
-        +  --elev-1: 0 0 0 1px #2B2B30;
-        +  --elev-2: 0 8px 24px rgba(0,0,0,.45), 0 0 0 1px #44444B;
-           --elev-3: 0 24px 64px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.04);
-         }
-    PASS contrast
-    PASS placeholders
-    PASS regression: previous gate
-    gate-1: verdict FAIL — written to verification/phase-1.json
+PASS tests
+PASS no-skips
+PASS idor
+PASS security
+PASS openapi
+PASS virtual child
+FAIL lint (exit 1) — last lines:
+    E501 Line too long (156 > 130)
+      --> app/middleware.py:8:131
+       |
+     6 | …
+     7 | …
+     8 | …L9xWiyWKkBdP5gOkx1/M=' 'sha256-qmDYHsvQtl4SIstx1bCCYTQdTu++NZnfxwMcENTH4l4='; "
+       |                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+     9 | …inline'; "
+    10 | …
+       |
+    
+    Found 1 error.
+PASS placeholders
+PASS regression: previous gate
 gate-2: verdict FAIL — written to verification/phase-2.json

@@ -1,0 +1,16 @@
+
+> senseheaven-web@1.0.0 types
+> openapi-typescript ../contracts/openapi.json -o src/lib/api-types.ts
+
+✨ openapi-typescript 7.13.0
+file:///Users/kanishkgupta/Desktop/aakhribaar_glm/web/node_modules/openapi-typescript/dist/lib/redoc.mjs:92
+  const openapiVersion = Number.parseFloat(document.parsed.openapi);
+                                                           ^
+
+TypeError: Cannot read properties of undefined (reading 'openapi')
+    at validateAndBundle (file:///Users/kanishkgupta/Desktop/aakhribaar_glm/web/node_modules/openapi-typescript/dist/lib/redoc.mjs:92:60)
+    at async openapiTS (file:///Users/kanishkgupta/Desktop/aakhribaar_glm/web/node_modules/openapi-typescript/dist/index.mjs:40:18)
+    at async generateSchema (file:///Users/kanishkgupta/Desktop/aakhribaar_glm/web/node_modules/openapi-typescript/bin/cli.js:143:5)
+    at async main (file:///Users/kanishkgupta/Desktop/aakhribaar_glm/web/node_modules/openapi-typescript/bin/cli.js:280:20)
+
+Node.js v26.8.2

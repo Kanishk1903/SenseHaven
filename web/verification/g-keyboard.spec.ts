@@ -6,7 +6,7 @@ import { expect, test } from "@playwright/test";
 
 test("G5 · keyboard: all interactive elements reachable with visible, unclipped focus (live-neutral)", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-02T23:10:00+05:30"));
-  await page.goto("/?fixture=live-neutral");
+  await page.goto("/app?fixture=live-neutral");
   await page.getByTestId("overview-ready").waitFor();
 
   const expected = await page.evaluate(() =>
@@ -54,7 +54,7 @@ test("G5 · keyboard: all interactive elements reachable with visible, unclipped
 
 test("G5 · keyboard: Esc closes the Add-time popover", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-02T23:10:00+05:30"));
-  await page.goto("/?fixture=live-calm");
+  await page.goto("/app?fixture=live-calm");
   await page.getByTestId("overview-ready").waitFor();
 
   await page.getByRole("button", { name: "Add time" }).click();

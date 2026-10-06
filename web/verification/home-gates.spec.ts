@@ -1,8 +1,6 @@
 /** H5 (keyboard), H7 (CLS across state cycling), H8 (motion), H10 (state sentinels). */
 import { expect, test } from "@playwright/test";
 
-const NOW = "2026-10-02T17:40:00.000Z";
-
 test.describe.configure({ mode: "serial" });
 
 test("H5 · keyboard: nav, switcher, pause operable; Esc closes the menu; no traps", async ({ page }) => {
@@ -10,8 +8,8 @@ test("H5 · keyboard: nav, switcher, pause operable; Esc closes the menu; no tra
   await page.getByTestId("home-ready").waitFor();
 
   // focus walk reaches the switcher and pause controls with visible rings
-  const switcher = page.getByRole("radiogroup", { name: "Demo state" });
-  await switcher.focus();
+  const radiogroup = page.getByRole("radiogroup", { name: "Demo state" });
+  await radiogroup.focus();
   await page.keyboard.press("ArrowRight"); // moves to Neutral
   await expect(page.getByRole("radio", { name: "Neutral" })).toBeChecked();
   await page.keyboard.press("ArrowRight");
@@ -57,7 +55,6 @@ test("H7 · CLS < 0.02 through load, font swap and all three demo states", async
   await page.getByTestId("home-ready").waitFor();
   await page.evaluate(() => document.fonts.ready);
 
-  const switcher = page.getByRole("radiogroup", { name: "Demo state" });
   for (const name of ["Neutral", "Stressed", "Calm"]) {
     await page.getByRole("radio", { name }).click();
     await page.waitForTimeout(150);

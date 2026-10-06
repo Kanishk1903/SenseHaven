@@ -7,6 +7,8 @@ import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./verification",
+  // the public-Home gates have their own runner: npm run verify:home
+  testIgnore: /home.*\.spec\.ts$/,
   timeout: 120_000,
   expect: { timeout: 10_000 },
   fullyParallel: true,

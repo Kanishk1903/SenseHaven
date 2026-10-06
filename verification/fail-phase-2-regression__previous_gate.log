@@ -1,40 +1,21 @@
-    -  --surface: #141722;
-    -  --surface-2: #1B1F2E;
-    -  --surface-3: #232840;
-    -  --border: #272C3F;
-    -  --border-strong: #3A4160;
-    -  --text: #ECEEF6;
-    -  --text-muted: #A4A9BE;
-    +  --bg: #0E0E10;
-    +  --surface: #17171A;
-    +  --surface-2: #1F1F23;
-    +  --surface-3: #26262B;
-    +  --border: #2B2B30;
-    +  --border-strong: #44444B;
-    +  --text: #EFECE4;
-    +  --text-muted: #A8A498;
-       --text-subtle: #8A90A8;
-    -  --primary: #8B97FF;
-    +  --primary: #8E98FF;
-       --primary-hover: #A3ACFF;
-    -  --primary-soft: #1E2447;
-    -  --on-primary: #0C0E14;
-    +  --primary-soft: #1E2047;
-    +  --on-primary: #0E0E10;
-       --calm: #3CCB9B;
-       --calm-fg: #7BE3C0;
-       --calm-soft: #10302A;
-    @@ -97,7 +99,7 @@
-       --info-fg: #B5BDFF;
-       --info-soft: #1E2447;
-       --scrim: rgba(0,0,0,0.6);
-    -  --elev-1: 0 0 0 1px #272C3F;
-    -  --elev-2: 0 8px 24px rgba(0,0,0,.45), 0 0 0 1px #3A4160;
-    +  --elev-1: 0 0 0 1px #2B2B30;
-    +  --elev-2: 0 8px 24px rgba(0,0,0,.45), 0 0 0 1px #44444B;
-       --elev-3: 0 24px 64px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.04);
-     }
+PASS error codes
+PASS settings schema
+PASS tokens generated
 PASS contrast
-PASS placeholders
-PASS regression: previous gate
+FAIL placeholders (exit 1) — last lines:
+    ./web/scripts/check-home-build.mjs:14:  [/\bTODO\b/, "TODO placeholder"],
+    ./web/scripts/check-home-build.mjs:26:console.log("H18 guard: home output clean (no CONFIRM/lorem/TODO/placeholder-price)");
+    no_placeholders: FAIL (hits above)
+FAIL regression: previous gate (exit 1) — last lines:
+    PASS layout
+    PASS doctor
+    PASS db
+    FAIL placeholders (exit 1) — last lines:
+        ./web/scripts/check-home-build.mjs:14:  [/\bTODO\b/, "TODO placeholder"],
+        ./web/scripts/check-home-build.mjs:26:console.log("H18 guard: home output clean (no CONFIRM/lorem/TODO/placeholder-price)");
+        no_placeholders: FAIL (hits above)
+    PASS gitignore
+    PASS runner
+    BLOCKED_ON_H1 ci — gh not authenticated or no origin remote — complete H1 (gh auth login + push), then re-run make gate-0
+    gate-0: verdict FAIL — written to verification/phase-0.json
 gate-1: verdict FAIL — written to verification/phase-1.json

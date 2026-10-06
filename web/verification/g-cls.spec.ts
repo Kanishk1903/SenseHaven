@@ -18,7 +18,7 @@ test("G7 · layout stays stable through a simulated poll refresh", async ({ page
   });
 
   await page.clock.setFixedTime(new Date("2026-10-02T23:10:00+05:30"));
-  await page.goto("/?fixture=live-neutral");
+  await page.goto("/app?fixture=live-neutral");
   await page.getByTestId("overview-ready").waitFor();
   await page.waitForTimeout(800);
 

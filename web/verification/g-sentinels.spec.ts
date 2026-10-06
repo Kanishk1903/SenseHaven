@@ -8,7 +8,7 @@ const NOW = new Date("2026-10-02T23:10:00+05:30");
 
 async function open(page: Page, fixture: string) {
   await page.clock.setFixedTime(NOW);
-  await page.goto(`/?fixture=${fixture}`);
+  await page.goto(`/app?fixture=${fixture}`);
   await page.getByTestId(fixture === "loading" ? "overview-loading" : "overview-ready").waitFor();
 }
 

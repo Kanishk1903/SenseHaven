@@ -1,40 +1,40 @@
 
-  3) e2e/overview.spec.ts:13:1 › login as the demo parent -> overview shows live status, KPIs and timeline 
-
-    Error: expect(locator).toBeVisible() failed
-
-    Locator: getByRole('heading', { name: 'Right now' })
-    Expected: visible
-    Timeout: 10000ms
-    Error: element(s) not found
-
-    Call log:
-      - Expect "toBeVisible" getByRole('heading', { name: 'Right now' }) with timeout 10000ms
-      - waiting for getByRole('heading', { name: 'Right now' })
-
-
-      14 |   await login(page, DEMO_EMAIL, DEMO_PASSWORD);
-      15 |
-    > 16 |   await expect(page.getByRole("heading", { name: "Right now" })).toBeVisible();
-         |                                                                  ^
-      17 |   await expect(page.getByLabel("Calm Index", { exact: true })).toBeVisible();
-      18 |   await expect(page.getByText("Screen time today")).toBeVisible();
-      19 |   await expect(page.getByText("Calm timeline — today")).toBeVisible();
-        at /Users/kanishkgupta/Desktop/aakhribaar_glm/web/e2e/overview.spec.ts:16:66
-
-    Error Context: test-results/overview-login-as-the-demo-4fcc3-ve-status-KPIs-and-timeline/error-context.md
-
-    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
-    test-results/overview-login-as-the-demo-4fcc3-ve-status-KPIs-and-timeline/trace.zip
-    Usage:
-
-        npx playwright show-trace test-results/overview-login-as-the-demo-4fcc3-ve-status-KPIs-and-timeline/trace.zip
-
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-  3 failed
-    e2e/alerts.spec.ts:7:1 › alerts: unread badge -> open alerts -> mark all read -> badge clears ──
-    e2e/alerts.spec.ts:25:1 › axe: no critical or serious violations on alerts ─────────────────────
-    e2e/overview.spec.ts:13:1 › login as the demo parent -> overview shows live status, KPIs and timeline 
-  1 did not run
-  2 passed (31.6s)
+computing gzip size...
+dist/index.html                                                     1.55 kB │ gzip:  0.67 kB
+dist/assets/jetbrains-mono-vietnamese-wght-normal-Bt-aOZkq.woff2    7.50 kB
+dist/assets/jetbrains-mono-greek-wght-normal-Bw9x6K1M.woff2         9.00 kB
+dist/.vite/manifest.json                                           10.09 kB │ gzip:  1.32 kB
+dist/assets/instrument-sans-latin-ext-wght-normal-B5bTHO_g.woff2   11.14 kB
+dist/assets/fraunces-vietnamese-wght-normal-CnvboYUG.woff2         11.57 kB
+dist/assets/jetbrains-mono-cyrillic-wght-normal-D73BlboJ.woff2     12.11 kB
+dist/assets/jetbrains-mono-latin-ext-wght-normal-DBQx-q_a.woff2    15.20 kB
+dist/assets/instrument-sans-latin-wght-normal-BbzFLZTg.woff2       30.09 kB
+dist/assets/fraunces-latin-ext-wght-normal-Ca2vKHc0.woff2          33.58 kB
+dist/assets/fraunces-latin-wght-normal-ukD16Tqj.woff2              36.62 kB
+dist/assets/jetbrains-mono-latin-wght-normal-B9CIFXIH.woff2        40.40 kB
+dist/assets/main-B6qBk7nd.css                                       6.43 kB │ gzip:  2.82 kB
+dist/assets/index-CBov0qdI.css                                     31.44 kB │ gzip:  7.47 kB
+dist/assets/handleApiError-TeYvCpfb.js                              0.19 kB │ gzip:  0.18 kB
+dist/assets/PageHeader-BMdc9C3u.js                                  0.46 kB │ gzip:  0.29 kB
+dist/assets/Skeleton-O0ss06iH.js                                    0.52 kB │ gzip:  0.32 kB
+dist/assets/islands-D6YNZ1f1.js                                     0.60 kB │ gzip:  0.38 kB
+dist/assets/card-CqRIFMct.js                                        0.69 kB │ gzip:  0.31 kB
+dist/assets/PinInput-DSJUIuAu.js                                    2.39 kB │ gzip:  1.24 kB
+dist/assets/AccountPage-CTk9ZiFg.js                                 2.84 kB │ gzip:  1.24 kB
+dist/assets/DownloadPage-DYCYh1wa.js                                3.03 kB │ gzip:  1.34 kB
+dist/assets/AlertsPage-WDpGoKfe.js                                  3.96 kB │ gzip:  1.80 kB
+dist/assets/index-B4CMf2ii.js                                       7.81 kB │ gzip:  2.95 kB
+dist/assets/OnboardingPage-CWRp8zIi.js                              8.03 kB │ gzip:  3.08 kB
+dist/assets/DayRibbon-Ga7-tDz2.js                                  11.54 kB │ gzip:  4.34 kB
+dist/assets/format-Bgbj86ln.js                                     12.48 kB │ gzip:  4.66 kB
+dist/assets/Combination-DwB7uv_b.js                                23.71 kB │ gzip:  8.48 kB
+dist/assets/OverviewPage-DeibyVS5.js                               24.51 kB │ gzip:  8.54 kB
+dist/assets/AnalyticsPage-DDkD0vor.js                              24.99 kB │ gzip:  8.76 kB
+dist/assets/SettingsPage-F85O8_6r.js                               28.34 kB │ gzip:  9.92 kB
+dist/assets/home-shared-BfJdK2cY.js                                40.83 kB │ gzip: 12.46 kB
+dist/assets/react-Ck907Ojk.js                                     185.77 kB │ gzip: 60.97 kB
+dist/assets/main-C93kcCy9.js                                      229.48 kB │ gzip: 67.98 kB
+✓ built in 1.72s
+== clearing stale listeners on 8021 ==
+== starting API (production, port 8021) ==
+not warm after 90s (last status 000)
