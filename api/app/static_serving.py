@@ -42,4 +42,7 @@ def mount_static(app: FastAPI, settings: Settings, web_dist: Path | None = None)
         if full_path and target.is_file() and dist.resolve() in target.parents:
             headers = {"Cache-Control": IMMUTABLE_CACHE} if full_path.startswith("assets/") else {}
             return FileResponse(target, headers=headers)
+        if full_path in ("", "/") and (dist / "home.html").is_file():
+            # the prerendered public Home (works without JavaScript; the SPA hydrates it)
+            return FileResponse(dist / "home.html", headers={"Cache-Control": "no-cache"})
         return FileResponse(dist / "index.html", headers={"Cache-Control": "no-cache"})

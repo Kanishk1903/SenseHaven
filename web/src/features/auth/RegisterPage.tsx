@@ -37,7 +37,7 @@ export function RegisterPage() {
   });
 
   useEffect(() => {
-    if (me) navigate("/", { replace: true });
+    if (me) navigate("/app", { replace: true });
   }, [me, navigate]);
 
   const onSubmit = async (values: RegisterValues) => {

@@ -67,7 +67,7 @@ export function OnboardingPage() {
           />
         ) : null}
         {step === 1 ? <StepSetPin onDone={() => setStep(2)} /> : null}
-        {step === 2 ? <StepPair onDone={() => navigate("/")} /> : null}
+        {step === 2 ? <StepPair onDone={() => navigate("/app")} /> : null}
       </div>
     </main>
   );

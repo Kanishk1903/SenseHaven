@@ -123,8 +123,13 @@ describe("auth pages (P4.7)", () => {
 });
 
 describe("routing guard (P4.7)", () => {
-  it("redirects an unauthenticated visitor from / to /login", async () => {
+  it("serves the public home to an unauthenticated visitor at /", async () => {
     renderWithProviders(<AppRoutes />, "/");
+    await waitFor(() => expect(screen.getByTestId("home-ready")).toBeInTheDocument());
+  });
+
+  it("redirects an unauthenticated visitor from /app to /login", async () => {
+    renderWithProviders(<AppRoutes />, "/app");
     await waitFor(() => expect(screen.getByRole("heading", { name: /Welcome back|Create your account/i })).toBeInTheDocument());
   });
 

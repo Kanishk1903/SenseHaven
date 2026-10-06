@@ -14,7 +14,9 @@
     "prebuild": "npm run tokens",
     "predev": "npm run tokens",
     "build:verify": "VITE_FIXTURES=1 vite build --mode verification",
-    "verify:ui": "npm run build:verify && playwright test --config playwright.verify.config.ts"
+    "verify:ui": "npm run build:verify && playwright test --config playwright.verify.config.ts",
+    "verify:home": "npm run build && node scripts/prerender-home.mjs && node scripts/check-home-build.mjs && playwright test --config playwright.home.config.ts",
+    "og": "node scripts/gen-home-assets.mjs"
   },
   "dependencies": {
     "@fontsource-variable/fraunces": "^5.3.0",

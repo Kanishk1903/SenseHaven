@@ -45,6 +45,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         openapi_url=None if settings.is_production else "/openapi.json",
     )
     install_middleware(app, settings)
+    app.add_middleware(GZipMiddleware, minimum_size=1024)
     install_error_handlers(app)
 
     from .routers import alerts, analytics, auth, children, device, devices, ops, pairing, parents, sessions

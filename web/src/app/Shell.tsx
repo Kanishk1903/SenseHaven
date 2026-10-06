@@ -210,7 +210,7 @@ export function Shell() {
         >
           <div>
             <div className="mb-4 flex flex-col items-center gap-1 lg:flex-row lg:justify-between">
-              <Link to="/" className="flex min-h-11 w-11 items-center justify-center gap-2 px-2 py-1 font-semibold lg:min-h-9 lg:w-auto">
+              <Link to="/app" className="flex min-h-11 w-11 items-center justify-center gap-2 px-2 py-1 font-semibold lg:min-h-9 lg:w-auto">
                 <BrandMark size={24} />
                 <span className="sr-only lg:hidden">SenseHeaven</span>
                 <span className={cn("hidden lg:inline", collapsed && "sr-only")}>SenseHeaven</span>

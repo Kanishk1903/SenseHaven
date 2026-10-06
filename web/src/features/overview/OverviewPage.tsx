@@ -12,6 +12,8 @@ import { handleApiError } from "@/lib/handleApiError";
 import { formatDuration } from "@/lib/format";
 import { useChild } from "@/app/childSelection";
 import { useChildren } from "@/lib/queries";
+import { statusSentence, humanAgo } from "@/components/now/status";
+import { NowPanelView } from "@/components/now/NowPanelView";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { DurationPicker } from "@/components/DurationPicker";
@@ -19,7 +21,6 @@ import { EmptyState } from "@/components/EmptyState";
 import { ErrorState } from "@/components/ErrorState";
 import { OrbMark } from "@/components/OrbMark";
 import { SkeletonCard } from "@/components/Skeleton";
-import { StatusChip, type StatusKind } from "@/components/StatusChip";
 import { DayRibbon } from "@/components/charts/DayRibbon";
 import {
   useAlerts,
@@ -32,59 +33,9 @@ import {
   useStartSession,
   useTimeline,
   type AlertRow,
-  type LiveState,
 } from "@/features/apiHooks";
 
 type Bucket = { t: string; value: number | null; n: number };
-
-function humanAgo(lastSeenAt: string | null, nowMs: number): { text: string; stale: boolean } {
-  if (!lastSeenAt) return { text: "not seen yet", stale: true };
-  const seconds = Math.max(0, Math.round((nowMs - new Date(lastSeenAt).getTime()) / 1000));
-  if (seconds < 60) return { text: "just now", stale: false };
-  const minutes = Math.round(seconds / 60);
-  if (minutes < 60) return { text: `${minutes} min ago`, stale: seconds > 90 };
-  const hours = Math.floor(minutes / 60);
-  return { text: `${hours} h ${minutes % 60} min ago`, stale: true };
-}
-
-/** Status sentence (spec 4.4) — answers "Is everything OK right now?" in plain words. */
-function statusSentence(live: LiveState, name: string, lastStressAt: string | null): { h1: string } {
-  const first = name || "Your child";
-  const sinceText = (lastSeenAt: string | null): string => {
-    if (!lastSeenAt) return "a while";
-    const minutes = Math.round((Date.now() - new Date(lastSeenAt).getTime()) / 60_000);
-    if (minutes < 60) return `${Math.max(1, minutes)} min`;
-    return `${Math.floor(minutes / 60)} h ${minutes % 60} min`;
-  };
-  switch (live.state) {
-    case "active": {
-      const label = live.calm_index?.label;
-      const rawMinutes = Math.max(0, live.remaining_s ?? 0) / 60;
-      if (rawMinutes < 5) return { h1: `${Math.ceil(rawMinutes)} min left in ${name}'s session.` };
-      const minutes = Math.round(rawMinutes);
-      if (label === "calm") return { h1: `${first} is calm. ${minutes} min left in this session.` };
-      if (label === "stressed" && lastStressAt) {
-        const at = new Date(lastStressAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-        return { h1: `${first} has had a tense few minutes. A breather was offered at ${at}.` };
-      }
-      return { h1: `${first} is doing okay. ${minutes} min left in this session.` };
-    }
-    case "cooldown": {
-      const at = lastStressAt
-        ? new Date(lastStressAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-        : "recently";
-      return { h1: `${first} has had a tense few minutes. A breather was offered at ${at}.` };
-    }
-    case "offline":
-      return { h1: `${first}'s phone hasn't checked in for ${sinceText(live.device?.last_seen_at ?? null)}. Limits still apply.` };
-    case "locked":
-      return live.session === null
-        ? { h1: `${first} isn't in a session right now.` }
-        : { h1: `${first}'s phone is locked.` };
-    default:
-      return { h1: `${first} isn't in a session right now.` };
-  }
-}
 
 function insightSentence(buckets: Bucket[], name: string): string | null {
   const withValues = buckets.filter((b) => b.value !== null);
@@ -186,111 +137,28 @@ function NowPanel() {
   const session = state.session;
   const offline = state.state === "offline";
   const active = state.state === "active";
-  const lockedSession = state.state === "locked" && session !== null;
-  const fraction =
-    session && session.granted_s + session.bonus_s > 0
-      ? Math.max(0, Math.min(1, (state.remaining_s ?? 0) / (session.granted_s + session.bonus_s)))
-      : 0;
 
-  return (
-    <section className="h-full rounded-panel border border-border bg-surface p-[clamp(12px,2.5vw,1.25rem)]" aria-label="Current status">
-      <p className="text-caption font-medium tracking-wide text-text-subtle">Now</p>
+  const actions = (
+    <>
+      {active ? <AddTimePopover sessionId={session?.id} /> : null}
+      {offline ? <AddTimePopover sessionId={session?.id} queued /> : null}
+      {session && active ? (
+        <LockButton sessionId={session.id} disabled={command.isPending} name={name} />
+      ) : null}
       {offline ? (
-        <p className="mt-2 text-secondary text-text-muted">
-          Limits still work offline. Anything you change here will apply when the phone reconnects.
-        </p>
+        <Button variant="secondary" disabled>
+          <Lock size={16} aria-hidden /> Lock now
+        </Button>
       ) : null}
-
-      <div className="mt-4 flex flex-col gap-6 sm:flex-row sm:items-center">
-        {/* ring + orb (176px, orb 96px inside; time sits to the RIGHT, not inside) */}
-        <div
-          className={cn("relative shrink-0", offline && "opacity-90")}
-          role="timer"
-          aria-label={`${Math.max(0, Math.round((state.remaining_s ?? 0) / 60))} minutes left`}
-        >
-          <div className="relative flex h-[176px] w-[176px] items-center justify-center">
-            <svg viewBox="0 0 176 176" className="absolute inset-0 -rotate-90">
-              <circle
-                cx="88" cy="88" r="83" fill="none"
-                stroke={offline ? "var(--rule-strong)" : "var(--rule)"}
-                strokeWidth="10"
-                strokeDasharray={offline ? "4 6" : undefined}
-              />
-              {!offline ? (
-                <circle
-                  cx="88" cy="88" r="83" fill="none"
-                  stroke={active && (state.remaining_s ?? 0) < 5 * 60 ? "var(--neutral)" : "var(--primary)"}
-                  strokeWidth="10" strokeLinecap="round"
-                  strokeDasharray={2 * Math.PI * 83}
-                  strokeDashoffset={2 * Math.PI * 83 * (1 - fraction)}
-                />
-              ) : null}
-            </svg>
-            <OrbMark
-              size={96}
-              state={offline ? "offline" : state.calm_index?.label === "calm" ? "calm" : state.calm_index?.label === "stressed" ? "stressed" : "neutral"}
-              breathe={active && state.calm_index?.label === "calm"}
-            />
-          </div>
-        </div>
-
-        <div className="min-w-0 flex-1">
-          {state.calm_index ? (
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <span className="tnum font-display text-[1.75rem] font-semibold leading-8 text-text" data-nowrap>
-                {state.calm_index.value}
-              </span>
-              <span className="inline-flex items-center" data-nowrap>
-                <StatusChip kind={state.calm_index.label as StatusKind} />
-              </span>
-              <span className="text-caption text-text-subtle">estimated from facial expressions</span>
-            </div>
-          ) : (
-            <p className="mt-3 text-secondary text-text-muted">No calm readings yet this session.</p>
-          )}
-
-          {state.remaining_s !== null ? (
-            <p className="mt-3">
-              <span className="tnum inline-block font-display text-[2.5rem] font-semibold leading-none text-text" data-nowrap>
-                {Math.floor(Math.max(0, state.remaining_s) / 60)}
-                <span className="ml-1.5 inline-block align-baseline font-sans text-[1.375rem] font-normal text-text-muted">min</span>
-              </span>
-              <span className="ml-2 inline-block max-w-full text-secondary text-text-subtle">left in this session</span>
-            </p>
-          ) : null}
-        </div>
-      </div>
-
-      {/* actions: state-driven (spec 4.2) — disabled actions carry their reason in text beneath */}
-      <div className="mt-5 flex flex-wrap items-center gap-2">
-        {active ? <AddTimePopover sessionId={session?.id} /> : null}
-        {offline ? <AddTimePopover sessionId={session?.id} queued /> : null}
-        {session && active ? (
-          <LockButton sessionId={session.id} disabled={command.isPending} name={name} />
-        ) : null}
-        {offline ? (
-          <Button variant="secondary" disabled>
-            <Lock size={16} aria-hidden /> Lock now
-          </Button>
-        ) : null}
-        {session && state.state === "cooldown" ? (
-          <LockButton sessionId={session.id} disabled={command.isPending} name={name} />
-        ) : null}
-        {session && (active || state.state === "cooldown") ? <MoreMenu sessionId={session.id} name={name} /> : null}
-        {(state.state === "locked" || state.state === "unpaired") ? <StartSessionButton /> : null}
-      </div>
-      {offline ? (
-        <p className="mt-2 text-caption text-text-subtle">Locking applies when the phone reconnects; add-time is queued.</p>
+      {session && state.state === "cooldown" ? (
+        <LockButton sessionId={session.id} disabled={command.isPending} name={name} />
       ) : null}
-      {state.state === "cooldown" ? (
-        <p className="mt-2 text-caption text-text-subtle">A breather is running; add-time resumes after it ends.</p>
-      ) : null}
-      {lockedSession ? (
-        <p className="mt-2 text-caption text-text-subtle">A locked session can't be changed. Start a new session instead.</p>
-      ) : null}
-
-    </section>
+      {session && (active || state.state === "cooldown") ? <MoreMenu sessionId={session.id} name={name} /> : null}
+      {(state.state === "locked" || state.state === "unpaired") ? <StartSessionButton /> : null}
+    </>
   );
+
+  return <NowPanelView state={state} actions={actions} />;
 }
 
 function LockButton({ sessionId, disabled, name }: { sessionId: string; disabled: boolean; name: string }) {

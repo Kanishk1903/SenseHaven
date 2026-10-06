@@ -1,0 +1,70 @@
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Does it work when the phone is offline?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The limits you set are enforced on your child's phone, so they hold without internet. Changes you make while the phone is offline apply when it reconnects."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What exactly is read from my child's phone?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The child app reads facial-geometry landmarks from the camera and computes a Calm Index on the device. Photos and video never leave the phone \u2014 only the derived readings sync to the dashboard."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is the Calm Index a diagnosis?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. It is an estimate from facial expressions, summarised as Calm, Neutral or Stressed. It is not a medical or psychological assessment, and expressions vary between people, lighting and cameras."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can my child see the dashboard?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. The dashboard lives on your account. By default the child app shows no score or mood label about them either \u2014 you can turn mood labels on in the dashboard settings."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do we delete our data?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "In the dashboard, Settings has a danger zone: deleting a child removes everything collected about them \u2014 readings, sessions, app usage and alerts \u2014 while keeping the child and device entry."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Which devices are supported?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The child app runs on Android 13 or later. The parent dashboard works in any modern browser."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What does it cost?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "There is no paid tier and no payment mechanism in the app."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do we stop using it?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Turn monitoring off in the dashboard settings, or delete your child's data. The child app then shows that it has been unpaired and stops reporting."
+      }
+    }
+  ]
+}

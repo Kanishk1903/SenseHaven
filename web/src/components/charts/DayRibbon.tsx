@@ -2,7 +2,6 @@
  *  is coloured by mood (OKLCH interpolation calm → neutral → stress), a 2px Calm Index line
  *  over it, hatched gap regions, session brackets and breather markers below, adaptive time
  *  axis, and a Now marker. Auto-zooms to the active window with a Full-day toggle. */
-import { ChevronDown } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { cn } from "@/lib/cn";
@@ -19,6 +18,10 @@ type Props = {
   nowIso?: string;
   /** default: zoom to active window; toggle to full day */
   autoZoom?: boolean;
+  /** past-day views hide the Now marker */
+  showNow?: boolean;
+  /** numbered footnote markers pinned to minutes on the strip (public Home marginalia) */
+  noteMarkers?: { at: number; label: string }[];
   className?: string;
   ariaLabel?: string;
 };
@@ -62,6 +65,8 @@ export function DayRibbon({
   sessions = [],
   nowIso,
   autoZoom = true,
+  showNow = true,
+  noteMarkers,
   className,
   ariaLabel = "Calm Index ribbon for today",
 }: Props) {
@@ -146,10 +151,12 @@ const H = Math.round((STRIP_H + BRACKET_H + AXIS_H) * u);
     const start = Math.ceil(domain.min / stepMin) * stepMin;
     // a "10:30 PM" label at 12·u units is ~56·u wide — keep only ticks that far apart
     const minGapX = 58 * u;
+    const labelHalf = 30 * u; // "10:30 PM" at 12·u units ≈ 60·u wide, centred
     const out: number[] = [];
     let lastX = -Infinity;
     for (let m = start; m <= domain.max; m += stepMin) {
       const xm = PAD_X + ((m - domain.min) / (domain.max - domain.min)) * (W - 2 * PAD_X);
+      if (xm - labelHalf < 0 || xm + labelHalf > W) continue; // never clip at the edges
       if (xm - lastX < minGapX) continue;
       out.push(m);
       lastX = xm;
@@ -157,7 +164,68 @@ const H = Math.round((STRIP_H + BRACKET_H + AXIS_H) * u);
     return out;
   }, [domain, u]);
 
-  const nowVisible = nowMin >= domain.min && nowMin <= domain.max;
+  const nowVisible = showNow && nowMin >= domain.min && nowMin <= domain.max;
+
+  // session captions: same px nudge (labels are wide relative to mobile strips)
+  const nudgedCaptions = useMemo(() => {
+    const width = renderedW ?? 900;
+    const px = (minute: number) => (x(minute) / W) * width;
+    const rows = sessions.map((br) => {
+      const from = minuteOfDay(br.from);
+      const to = minuteOfDay(br.to);
+      const mid = (px(Math.max(from, domain.min)) + px(Math.min(to, domain.max))) / 2;
+      return { key: br.from, label: br.label, midPx: mid };
+    });
+    const halfLabel = (label: string) => (label.length * 6.6) / 2;
+    let last = -Infinity;
+    let prevLabel = "";
+    const placed = rows.map((r) => {
+      const gap = last === -Infinity ? 0 : halfLabel(prevLabel) + halfLabel(r.label) + 8;
+      const raw = Math.max(r.midPx, last + gap);
+      last = raw;
+      prevLabel = r.label;
+      return { ...r, midPx: raw };
+    });
+    return placed.map((r) => {
+      // keep the whole label inside the strip: clamp by the label's own half-width
+      const minPct = ((halfLabel(r.label) + 4) / width) * 100;
+      const maxPct = ((width - halfLabel(r.label) - 4) / width) * 100;
+      return { ...r, leftPct: Math.min(Math.max(4, maxPct), Math.max(minPct, Math.min(96, (r.midPx / width) * 100))) };
+    });
+  }, [sessions, domain, x, renderedW]);
+
+  // footnote chips: nudge close anchors apart in RENDERED px so they never collide
+  const nudgedMarkers = useMemo(() => {
+    if (!noteMarkers?.length) return [];
+    const width = renderedW ?? 900;
+    const px = (minute: number) => ((8 + (minute / (24 * 60)) * 884) / 900) * width;
+    const minSep = 30;
+    // episode/breather hotspots occupy their minutes first; each chip then takes the
+    // nearest free slot so nothing overlaps at any width or zoom
+    const hotspots = new Set(
+      [...episodes, ...breathers].map((m) => px(minuteOfDay(m.t))).filter((x) => x >= 22 && x <= width - 22),
+    );
+    const reserved: number[] = [...hotspots];
+    // chips are 24px wide, hotspots 44px: clearance = half widths + 4px gap each pair
+    const free = (x: number) =>
+      reserved.every((r) => Math.abs(x - r) >= (hotspots.has(r) ? 38 : minSep));
+    const placed = [...noteMarkers]
+      .sort((a, b) => a.at - b.at)
+      .map((m) => {
+        const desired = Math.min(width - 14, Math.max(14, px(m.at)));
+        for (let off = 0; off <= width; off += minSep / 2) {
+          for (const candidate of [desired + off, desired - off]) {
+            if (candidate < 14 || candidate > width - 14) continue;
+            if (free(candidate)) {
+              reserved.push(candidate);
+              return { label: m.label, leftPct: (candidate / width) * 100 };
+            }
+          }
+        }
+        return { label: m.label, leftPct: (desired / width) * 100 };
+      });
+    return placed;
+  }, [noteMarkers, episodes, breathers, renderedW]);
 
   // inspection: hover or arrow keys pick the nearest reading; the crosshair + card
   // read out time · value · state (spec 4.6). Cleared when the domain changes.
@@ -381,6 +449,16 @@ const H = Math.round((STRIP_H + BRACKET_H + AXIS_H) * u);
         </div>
       ) : null}
       <div className="absolute inset-x-0 top-0" style={{ height: 56 }}>
+        {(nudgedMarkers ?? []).map((marker) => (
+            <span
+              key={marker.label}
+              aria-hidden
+              className="tnum absolute top-1/2 flex h-[24px] w-[24px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-pill border border-[var(--rule-strong)] bg-surface text-[12px] font-semibold text-text"
+              style={{ left: `${marker.leftPct}%` }}
+            >
+              {marker.label}
+            </span>
+          ))}
         {[...episodes, ...breathers].map((marker) => {
           const m = minuteOfDay(marker.t);
           if (m < domain.min || m > domain.max) return null;
@@ -390,7 +468,7 @@ const H = Math.round((STRIP_H + BRACKET_H + AXIS_H) * u);
               type="button"
               aria-label={marker.label}
               title={marker.label}
-              className="absolute top-0 h-full w-11 -translate-x-1/2 rounded-control hover:bg-surface-3/40"
+              className="absolute top-0 h-full w-[44px] -translate-x-1/2 rounded-control hover:bg-surface-3/40"
               style={{ left: `${(x(m) / W) * 100}%` }}
             />
           );
@@ -399,21 +477,16 @@ const H = Math.round((STRIP_H + BRACKET_H + AXIS_H) * u);
       </div>
       {/* session-length labels live in flow below the strip — never boxed against axis text */}
       {sessions.length > 0 ? (
-        <div className="relative h-5" aria-hidden>
-          {sessions.map((br) => {
-            const from = minuteOfDay(br.from);
-            const to = minuteOfDay(br.to);
-            const mid = ((x(Math.max(from, domain.min)) + x(Math.min(to, domain.max))) / 2 / W) * 100;
-            return (
-              <span
-                key={br.from}
-                className="tnum absolute top-0.5 -translate-x-1/2 whitespace-nowrap font-mono text-caption text-text-muted"
-                style={{ left: `${Math.min(78, Math.max(4, mid))}%` }}
-              >
-                {br.label}
-              </span>
-            );
-          })}
+        <div className="relative hidden h-5 sm:block" aria-hidden>
+          {nudgedCaptions.map((cap) => (
+            <span
+              key={cap.key}
+              className="tnum absolute top-0.5 -translate-x-1/2 whitespace-nowrap font-mono text-caption text-text-muted"
+              style={{ left: `${cap.leftPct}%` }}
+            >
+              {cap.label}
+            </span>
+          ))}
         </div>
       ) : null}
 
@@ -421,7 +494,7 @@ const H = Math.round((STRIP_H + BRACKET_H + AXIS_H) * u);
       {hourly.length > 0 ? (
         <details className="mt-1">
           <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1 text-secondary hover:text-text lg:min-h-6 [&::-webkit-details-marker]:hidden">
-            <ChevronDown size={14} aria-hidden /> View as table
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M6 9l6 6 6-6" /></svg> View as table
           </summary>
           <div className="mt-2 overflow-x-auto" data-scroll-x>
             <table className="w-full text-left text-secondary">

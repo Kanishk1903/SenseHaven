@@ -33,7 +33,7 @@ export function LoginPage() {
   });
 
   useEffect(() => {
-    if (me) navigate("/", { replace: true });
+    if (me) navigate("/app", { replace: true });
   }, [me, navigate]);
 
   useEffect(() => {
@@ -47,7 +47,7 @@ export function LoginPage() {
     try {
       const { api } = await import("@/lib/api");
       await api.post("/auth/login", values);
-      navigate("/", { replace: true });
+      navigate("/app", { replace: true });
     } catch (error) {
       if (error instanceof ApiError) {
         setServerError({ message: error.message, code: error.code, retryAfter: error.retryAfter });

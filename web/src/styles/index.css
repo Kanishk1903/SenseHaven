@@ -6,6 +6,7 @@
 
 @layer base {
   html {
+    scroll-padding-top: 72px;
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
@@ -45,6 +46,18 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Public Home: one-time ribbon draw (removed under reduced motion, static otherwise) */
+@keyframes ribbon-draw {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+.ribbon-draw { clip-path: inset(0 100% 0 0); }
+.ribbon-revealed { animation: ribbon-draw 900ms cubic-bezier(0.2, 0.7, 0.2, 1) 1 both; }
+@media (prefers-reduced-motion: reduce) {
+  .ribbon-draw { clip-path: none; }
+  .ribbon-revealed { animation: none; clip-path: none; }
 }
 
 /* Dark-mode specifics (spec 3.4): dim illustrations slightly */

@@ -342,7 +342,7 @@ export function SettingsPage() {
           try {
             await api.delete(`/children/${child!.id}`);
             await children.refetch();
-            navigate("/");
+            navigate("/app");
           } catch (error) {
             await handleApiError(error);
           }
