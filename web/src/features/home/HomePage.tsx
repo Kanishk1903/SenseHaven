@@ -3,7 +3,7 @@
  *  shown is the real Overview components fed by sample data — no screenshots, no device
  *  frames, no invented facts. Every factual claim traces to code or the API (see
  *  verification/home/report.md). */
-import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 
 // the ribbon is below the fold: split + hydrate on visibility (spec §9.1)
 const DayRibbon = lazy(() => import("@/components/charts/DayRibbon").then((m) => ({ default: m.DayRibbon })));
@@ -45,14 +45,6 @@ function usePrefersReducedMotion(): boolean {
   return reduced;
 }
 
-function SectionLabel({ n }: { n: string }) {
-  return (
-    <p aria-hidden className="font-display text-h3 font-semibold text-text-subtle">
-      {n}
-    </p>
-  );
-}
-
 function SectionHeading({ id, children }: { id?: string; children: React.ReactNode }) {
   return (
     <h2 id={id} className="mt-1 font-display text-h2 font-semibold text-text" style={{ textWrap: "balance" }}>
@@ -62,12 +54,10 @@ function SectionHeading({ id, children }: { id?: string; children: React.ReactNo
 }
 
 function SectionFrame({
-  n,
   id,
   children,
   band = false,
 }: {
-  n: string;
   id?: string;
   children: React.ReactNode;
   band?: boolean;
@@ -75,28 +65,20 @@ function SectionFrame({
   return (
     <section id={id} className={cn("scroll-mt-20 border-t border-border", band && "bg-surface-2")}>
       <div className="mx-auto max-w-[1240px] px-4 py-[clamp(56px,9vw,128px)] md:px-8">
-        <div className="grid gap-6 md:grid-cols-[64px_minmax(0,1fr)]">
-          <SectionLabel n={n} />
-          <div className="min-w-0">{children}</div>
-        </div>
+        <div className="mx-auto max-w-[900px] min-w-0">{children}</div>
       </div>
     </section>
   );
 }
 
-/** The signature section: a sample past day with annotated marginalia (spec §4.4). */
+/** The signature section: a sample past day with numbered annotations on the ribbon. */
 function SampleDay() {
-  const sectionRef = useRef<HTMLElement>(null);
   const stripRef = useRef<HTMLDivElement>(null);
-  const marginRef = useRef<HTMLDivElement>(null);
-  const noteRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const [leaders, setLeaders] = useState<{ d: string; dotX: number; dotY: number }[] | null>(null);
-  const [noteTops, setNoteTops] = useState<number[] | null>(null);
   const [revealed, setRevealed] = useState(false);
   const reduced = usePrefersReducedMotion();
 
   useEffect(() => {
-    const el = sectionRef.current;
+    const el = stripRef.current;
     if (!el || reduced) return;
     if (typeof IntersectionObserver === "undefined") return;
     const io = new IntersectionObserver((entries) => {
@@ -109,58 +91,11 @@ function SampleDay() {
     return () => io.disconnect();
   }, [reduced]);
 
-  // leaders are measured so they land on the right ribbon points at every width
-  useLayoutEffect(() => {
-    const measure = () => {
-      const section = sectionRef.current;
-      const strip = stripRef.current;
-      if (!section || !strip) return;
-      const sb = section.getBoundingClientRect();
-      const rb = strip.getBoundingClientRect();
-      const stripY = ((rb.top + rb.height / 2 - sb.top) / sb.height) * 100;
-      // stack the notes from just below the strip, spaced by their measured heights
-      const heights = noteRefs.current.slice(0, SAMPLE_NOTES.length).map(
-        (el) => (el?.getBoundingClientRect().height ?? 20) + 10,
-      );
-      const stripBottom = rb.bottom - sb.top + 8;
-      const tops: number[] = [];
-      let cursor = stripBottom;
-      for (const h of heights) {
-        tops.push(cursor);
-        cursor += h;
-      }
-      setNoteTops(tops);
-      const tops0 = tops; // leader endpoints track the same stacked positions
-      const lines = SAMPLE_NOTES.map((note, i) => {
-        const noteY = ((tops0[i]! + (heights[i]! - 10) / 2) / sb.height) * 100;
-        const noteX = ((sb.width - 300) / sb.width) * 100; // notes live in the 300px margin column
-        const ribbonX = ((8 + (note.at / (24 * 60)) * 884) / 900) * 100;
-        const elbow = Math.min(99, noteX + 1.5);
-        return {
-          d: `M ${noteX} ${noteY} L ${elbow} ${noteY} L ${elbow} ${stripY} L ${ribbonX} ${stripY}`,
-          dotX: ribbonX,
-          dotY: stripY,
-        };
-      });
-      setLeaders(lines);
-    };
-    measure();
-    if (typeof ResizeObserver === "undefined") return;
-    const ro = new ResizeObserver(measure);
-    if (sectionRef.current) ro.observe(sectionRef.current);
-    window.addEventListener("resize", measure);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", measure);
-    };
-  }, []);
-
   return (
-    <section ref={sectionRef} id="sample-day" aria-labelledby="sample-day-heading" className="relative scroll-mt-20 border-t border-border">
+    <section id="sample-day" aria-labelledby="sample-day-heading" className="scroll-mt-20 border-t border-border">
       <div className="mx-auto max-w-[1240px] px-4 py-[clamp(56px,9vw,128px)] md:px-8">
-        <div className="grid gap-6 md:grid-cols-[64px_minmax(0,1fr)] lg:grid-cols-[64px_minmax(0,1fr)_300px]">
-          <SectionLabel n="2" />
-          <div className="min-w-0 lg:col-start-2 lg:row-start-1">
+        <div className="mx-auto max-w-[900px]">
+          <div className="min-w-0">
             <SectionHeading id="sample-day-heading">A sample day</SectionHeading>
             <p className="mt-2 max-w-[56ch] text-secondary">{SAMPLE_DAY.insight}</p>
 
@@ -197,45 +132,7 @@ function SampleDay() {
               ))}
             </ol>
           </div>
-
-          {/* marginalia column ≥ lg */}
-          <div className="relative hidden lg:col-start-3 lg:row-start-1 lg:block" aria-hidden ref={marginRef}>
-            {SAMPLE_NOTES.map((note, i) => (
-              <div
-                key={note.at}
-                ref={(el) => {
-                  noteRefs.current[i] = el;
-                }}
-                className="absolute left-0 w-[280px]"
-                style={{ top: `${(noteTops ?? [8, 38, 68, 98])[i] ?? 8 + i * 30}px` }}
-              >
-                <p className="text-[0.875rem]/5 text-text-muted">
-                  <span className="font-display font-semibold text-text">{i + 1}</span> {note.note}
-                </p>
-              </div>
-            ))}
-          </div>
         </div>
-
-        {/* hairline leaders from the margin notes to their points on the ribbon */}
-        <svg
-          className="pointer-events-none absolute inset-0 hidden h-full w-full lg:block"
-          viewBox="0 0 100 100"
-          preserveAspectRatio="none"
-          aria-hidden
-        >
-          {leaders?.map((l, i) => (
-            <path key={i} d={l.d} fill="none" stroke="var(--rule-strong)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
-          ))}
-        </svg>
-        {leaders?.map((l, i) => (
-          <span
-            key={`dot-${i}`}
-            aria-hidden
-            className="absolute hidden h-1 w-1 -translate-x-1/2 -translate-y-1/2 rounded-pill bg-[var(--rule-strong)] lg:block"
-            style={{ left: `${l.dotX}%`, top: `${l.dotY}%` }}
-          />
-        ))}
       </div>
     </section>
   );
@@ -353,7 +250,7 @@ export function HomePage() {
         </section>
 
         {/* ── 1 · The tally ────────────────────────────────────────────────── */}
-        <SectionFrame n="1">
+        <SectionFrame>
           <SectionHeading>A tally of minutes doesn't tell you how the minutes went.</SectionHeading>
           <p className="mt-4 max-w-[60ch] text-body/6 text-secondary">
             Two hours can be a calm drawing session or a tense evening over a game. Most tools
@@ -369,7 +266,7 @@ export function HomePage() {
         <SampleDay />
 
         {/* ── 3 · How it works ─────────────────────────────────────────────── */}
-        <SectionFrame n="3" id="how-it-works">
+        <SectionFrame id="how-it-works">
           <SectionHeading>How it works</SectionHeading>
           <ol className="mt-6">
             {[
@@ -417,7 +314,7 @@ export function HomePage() {
         </SectionFrame>
 
         {/* ── 4 · Controls you keep ────────────────────────────────────────── */}
-        <SectionFrame n="4">
+        <SectionFrame>
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
             <div className="min-w-0">
               <SectionHeading>You stay in charge.</SectionHeading>
@@ -443,25 +340,22 @@ export function HomePage() {
         {/* ── 5 · What we do not do (the one band) ─────────────────────────── */}
         <section className="scroll-mt-20 bg-surface-2">
           <div className="mx-auto max-w-[1240px] px-4 py-[clamp(56px,9vw,128px)] md:px-8">
-            <div className="grid gap-6 md:grid-cols-[64px_minmax(0,1fr)]">
-              <SectionLabel n="5" />
-              <div className="min-w-0">
-                <SectionHeading>What we do not do</SectionHeading>
-                <dl className="mt-6 grid gap-x-10 gap-y-4 md:grid-cols-2">
-                  {NOT_DO.map((row) => (
-                    <div key={row.we} className="border-t border-[var(--rule-strong)] pt-3">
-                      <dt className="text-secondary font-medium">{row.we}</dt>
-                      <dd className="mt-0.5 text-secondary text-text-muted">{row.because}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </div>
+            <div className="mx-auto max-w-[900px] min-w-0">
+              <SectionHeading>What we do not do</SectionHeading>
+              <dl className="mt-6 grid gap-x-10 gap-y-4 md:grid-cols-2">
+                {NOT_DO.map((row) => (
+                  <div key={row.we} className="border-t border-[var(--rule-strong)] pt-3">
+                    <dt className="text-secondary font-medium">{row.we}</dt>
+                    <dd className="mt-0.5 text-secondary text-text-muted">{row.because}</dd>
+                  </div>
+                ))}
+              </dl>
             </div>
           </div>
         </section>
 
         {/* ── 6 · What the child sees ──────────────────────────────────────── */}
-        <SectionFrame n="6">
+        <SectionFrame>
           <div className="grid gap-8 md:grid-cols-2">
             <div className="min-w-0">
               <SectionHeading>A calmer phone for them, too.</SectionHeading>
@@ -481,7 +375,7 @@ export function HomePage() {
         </SectionFrame>
 
         {/* ── 7 · Honest about estimates ───────────────────────────────────── */}
-        <SectionFrame n="7" id="privacy">
+        <SectionFrame id="privacy">
           <SectionHeading>What the Calm Index is, and isn't.</SectionHeading>
           <div className="mt-6 max-w-[70ch]">
             <div className="border-t border-border py-4">
@@ -513,7 +407,7 @@ export function HomePage() {
         </SectionFrame>
 
         {/* ── 8 · Questions ────────────────────────────────────────────────── */}
-        <SectionFrame n="8" id="questions">
+        <SectionFrame id="questions">
           <SectionHeading>Questions</SectionHeading>
           <div className="mt-6 max-w-[70ch]">
             {FAQ.map((item) => (

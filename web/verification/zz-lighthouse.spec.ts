@@ -12,7 +12,7 @@ import { promisify } from "node:util";
 import { chromium, expect, test } from "@playwright/test";
 
 const pExecFile = promisify(execFile);
-const BASE = process.env.E2E_BASE_URL ?? "http://127.0.0.1:4173";
+const BASE = process.env.E2E_BASE_URL ?? "http://localhost:4173";
 
 async function audit(fixture: string): Promise<Record<string, number>> {
   const chrome = chromium.executablePath();

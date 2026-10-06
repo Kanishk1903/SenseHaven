@@ -16,12 +16,12 @@ export default defineConfig({
   retries: 0,
   reporter: [["list"]],
   use: {
-    baseURL: "http://127.0.0.1:4173",
+    baseURL: "http://localhost:4173",
     trace: "retain-on-failure",
   },
   webServer: {
     command: "npx vite preview --port 4173 --strictPort",
-    port: 4173,
+    port: 4173, // vite preview binds ::1 — tests resolve via localhost
     reuseExistingServer: !process.env.CI,
     timeout: 30_000,
   },
