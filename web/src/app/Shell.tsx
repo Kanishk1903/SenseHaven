@@ -54,7 +54,7 @@ function navGroups(unread: number): { label: string; items: { to: string; label:
   {
     label: "Monitor",
     items: [
-      { to: "/", label: "Overview", Icon: LayoutDashboard, end: true },
+      { to: "/app", label: "Overview", Icon: LayoutDashboard, end: true },
       { to: "__analytics__", label: "Analytics", Icon: LineChart, end: false },
       { to: "/alerts", label: unread > 0 ? `Alerts (${unread} unread)` : "Alerts", Icon: Bell, end: false },
     ],
