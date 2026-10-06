@@ -6,10 +6,10 @@ export function AuthLayout({ children, heading }: { children: React.ReactNode; h
     <div className="flex min-h-screen">
       <main className="flex w-full flex-col justify-center px-6 py-10 lg:w-[480px] lg:px-12">
         <div className="mx-auto w-full max-w-[400px]">
-          <div className="mb-8 flex items-center gap-2">
+          <a href="/" className="mb-8 inline-flex min-h-11 items-center gap-2" aria-label="SenseHeaven home">
             <BrandMark size={28} />
-            <span className="font-semibold">SenseHeaven</span>
-          </div>
+            <span className="font-display font-semibold text-text">SenseHeaven</span>
+          </a>
           <h1 className="font-display text-h1 font-semibold text-text">{heading}</h1>
           {children}
         </div>
