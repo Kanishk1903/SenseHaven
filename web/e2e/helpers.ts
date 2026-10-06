@@ -28,7 +28,7 @@ export function failOnConsoleErrors(page: Page) {
 export async function login(page: Page, email: string, password: string) {
   await page.goto("/login");
   await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Password").fill(password);
+  await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: /Sign in/ }).click();
   // the redesigned overview greets "Hi {name}'s parent" — anchor on the nav link instead
   await expect(page.getByRole("link", { name: "Overview" }).first()).toBeVisible({ timeout: 15_000 });
